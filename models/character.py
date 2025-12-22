@@ -9,7 +9,7 @@ import textwrap
 class Character:
 
     # region Constructor event for character stats:
-    def __init__(self, char_type_enum, spawn_grid_x, spawn_grid_y, spawn_grid):
+    def __init__(self, char_type_enum, spawn_grid_x, spawn_grid_y, spawn_grid, char_team_enum):
 
         # Default values for instance vars for this particularly character:
         self.strength = 0
@@ -38,9 +38,12 @@ class Character:
         self.res_gas = 0
         self.res_electric = 0
 
-        self.action_points = 2
+        self.cur_action_points = 2
+        self.max_action_points = 2
 
         self.inv_list = []
+
+        self.char_team_enum = char_team_enum
 
         self.name = "Not defined"
 
@@ -396,6 +399,68 @@ class Character:
             item_to_equip = Item(ENUM_ITEM_CIVILIAN_JUMPSUIT)
             self.equip_item(item_to_equip ,item_to_equip.equip_slot_enum ,True)
 
+        elif char_type_enum == ENUM_CHARACTER_NEUTRAL_INFECTED_SCIENTIST:
+            self.name = "Gregos, 'The Researcher'"
+            self.hp_max = 5
+            self.hp_cur = 2
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 2
+            self.sanity_max = 2
+
+            # Starting equipment
+            item_to_equip = Item(ENUM_ITEM_SCIENTIST_LABCOAT)
+            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+
+        elif char_type_enum == ENUM_CHARACTER_ENEMY_SKITTERING_LARVA:
+            self.name = "Skittering Larva"
+            self.hp_max = 3
+            self.hp_cur = 3
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+
+            self.armor = 0
+            self.evasion = 3
+            self.res_fire = 0
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = 0
+
+        elif char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER:
+            self.name = "Lumbering Mauler"
+            self.hp_max = 18
+            self.hp_cur = 18
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+
+            self.armor = 1
+            self.evasion = 0
+            self.res_fire = 0
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = 0
+
+        elif char_type_enum == ENUM_CHARACTER_ENEMY_SPINED_SPITTER:
+            self.name = "Spined Spitter"
+            self.hp_max = 10
+            self.hp_cur = 10
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+
+            self.armor = 0
+            self.evasion = 0
+            self.res_fire = 0
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = 0
+
+
     # endregion
 
     def print_char_inv(self):
@@ -434,9 +499,10 @@ class Character:
         print \
             ("Simply enter the associated number to use, equip, unequip, or swap an item; or enter 'BACK' to leave the inventory screen.")
         print("You can also enter 'L{ITEM NUMBER} to get a description of the corresponding item;")
+        print("Or 'G{ITEM NUMBER} to give the corresponding item to another player;")
         print \
             ("Or 'D{ITEM NUMBER} to drop the item back into your current room (you could retrieve it again with 'SCAVENGE').")
-        print("Enter your selection now:")
+        print("Enter your selection now >")
 
     def equip_item(self ,item_inst_id ,item_index ,starting_equip_boolean = False):
         if item_inst_id.equip_slot_enum != -1:

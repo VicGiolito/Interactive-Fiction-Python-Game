@@ -1,7 +1,9 @@
 
 from constants import *
 from models.item import Item
+from models.character import Character
 
+from collections import Counter
 import random
 import textwrap
 
@@ -30,10 +32,16 @@ class Room:
         for i in range(0, ENUM_SCAVENGE_TOTAL_RESOURCES):
             self.scavenge_resource_list.append(0)
 
+        #enemies_in_room_list and pcs_in_room_list:
+        self.enemies_in_room_list = -1
+        self.pcs_in_room_list = -1
+        self.neutrals_in_room_list = -1
+
         self.grid_x = grid_x
         self.grid_y = grid_y
         self.room_type_enum = room_type_enum
         self.location_type_enum = location_type_enum
+        self.room_name = "Not defined"
 
         if self.location_type_enum == ENUM_LOCATION_NIFFY:
             if self.room_type_enum == ENUM_ROOM_NIFFY_CORRIDOR_BASIC_NORTH_SOUTH:
@@ -41,11 +49,13 @@ class Room:
                 self.unpowered_room_desc = [ "This basic corridor only serves as a connection between two areas on the ship. The floor is metal grating and the walls are dirty panels of burnished steel. A few piles of refuse lay scattered about, evidence of the vessel's disuse." ]
                 self.directional_dict["NORTH"] = ENUM_DOOR_UNLOCKED
                 self.directional_dict["SOUTH"] = ENUM_DOOR_UNLOCKED
+                self.room_name = "NIFFY BASIC NS CORRIDOR"
             elif self.room_type_enum == ENUM_ROOM_NIFFY_CORRIDOR_BASIC_EAST_WEST:
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_TECH_BASIC] = random.randint(0 ,3)
                 self.unpowered_room_desc = [ "This basic corridor only serves as a connection between two areas on the ship. The floor is metal grating and the walls are dirty panels of burnished steel. A few piles of refuse lay scattered about, evidence of the vessel's disuse." ]
                 self.directional_dict["EAST"] = ENUM_DOOR_UNLOCKED
                 self.directional_dict["WEST"] = ENUM_DOOR_UNLOCKED
+                self.room_name = "NIFFY BASIC EW CORRIDOR"
             elif self.room_type_enum == ENUM_ROOM_NIFFY_STORAGE_ROOM:
                 self.cover = 2
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_TECH_BASIC] = random.randint(0 ,3)
@@ -53,11 +63,13 @@ class Room:
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_FOOD] = random.randint(0 ,2)
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_CREDITS] = random.randint(0 ,2)
                 self.unpowered_room_desc = [ "Racks of mostly empty shelving and opened boxes indicate that this room was once used for storage. Dust and debris are mostly all that remain. It looks as though the most important items have been pilfered already. The whirling red flare of the emergency lights overhead sends strange shadows pin-wheeling across the room." ]
+                self.room_name = "NIFFY STORAGE ROOM"
             elif self.room_type_enum == ENUM_ROOM_NIFFY_HYDROPONICS_LAB:
                 self.cover = 1
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_FOOD] = random.randint(0, 2)
                 self.unpowered_room_desc = [ "Rows and rows of metal grow boxes line the room, their contents nothing more than withered weeds to clutching to dry, gray dirt. There's a nest of hydraulics and hoses in the walls, and huge sunlamps are recessed in the ceiling, now dark and inert. If you can restore power to this room, perhaps there's a way to get these hydroponics working again?" ]
                 self.powered_room_desc = [ "The rows of hydroponics buzz happily with spray from the moisture pumps, while the leafy green vegetables within eagerly drink the light from the sunlamps overhead. These crops of potatoes, beans, and cabbages have clearly been genetically modified to grow quickly." ]
+                self.room_name = "NIFFY HYDRO LAB"
             elif self.room_type_enum == ENUM_ROOM_NIFFY_STASIS_CHAMBER:
                 self.cover = 1
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_TECH_BASIC] = 3
@@ -66,8 +78,9 @@ class Room:
                 self.scavenge_resource_list.append(Item(ENUM_ITEM_SUIT_ENVIRONMENTAL))
                 self.scavenge_resource_list.append(Item(ENUM_ITEM_MEDKIT))
 
-                self.directional_dict["EAST"] = ENUM_DOOR_JAMMED
-                self.directional_dict["WEST"] = ENUM_DOOR_JAMMED
+                self.directional_dict["EAST"] = ENUM_DOOR_UNLOCKED
+                self.directional_dict["WEST"] = ENUM_DOOR_UNLOCKED
+                self.room_name = "NIFFY STASIS ROOM"
 
                 self.unpowered_room_desc = [
                     "Klaxons blare, and an eerie red illumination seeps from the emergency lights in the floor. Row upon row of stasis pods have been arranged in this room, most of them shattered or inoperable. Those corpses who had sought refuge within them have met a truly ignoble end, asphyxiated in their sleep. There's only one STASIS POD that still looks operational and inviting, gleaming pearl-white in the blood-hued gloom.",
@@ -78,23 +91,24 @@ class Room:
             elif self.room_type_enum == ENUM_ROOM_NIFFY_CORRIDOR_SR_WEST:
                 self.cover = 1
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_TECH_BASIC] = 1
+                self.room_name = "NIFFY SR CORRIDOR W"
 
-
-                self.directional_dict["EAST"] = ENUM_DOOR_LOCKED
+                self.directional_dict["EAST"] = ENUM_DOOR_UNLOCKED
                 self.directional_dict["WEST"] = ENUM_DOOR_JAMMED
 
                 self.unpowered_room_desc = [
                     "The air smells foul and stuffy in this narrow corridor, and is suffused with the same ominous dim red light. The floor is metal grating and the walls are made up of panels of burnished steel.",
                     "A shadowed and inert form is slumped against the western bulkhead door, as if in peaceful repose. Upon closer inspection, you can see that the man is one of the security forces on board, if his military fatigues and body armor are any indication. You can also see that he is very dead: his eyes stare lifelessly at the jagged hole in his abdomen beneath his flak vest, admiring the great heap of coiled intestines that lay piled between his legs.",
-                    "If your eyes aren't mistaken in the gloomy light, there's a strangely colored, green goo clinging to the edges of the gaping wound, and more of it dribbling from his mouth. The CORPSE is also clutching a pistol in a death grip. Judging by the gaping hole in the side of his head, it looks as though his last act was to use the weapon on himself.",
+                    "If your eyes aren't mistaken in the gloomy light, there's a strangely colored, green goo clinging to the edges of the gaping wound, and more of it dribbling from his mouth. The CORPSE is also clutching a pistol in a death grip. Judging by the bloody hole in the side of his head, it looks as though his last act was to use the weapon on himself.",
                     "The self-inflicted head wound, combined with the abyss where the man's stomach used to be, has certainly given you pause. Nonetheless, the CORPSE is carrying some useful looking gear, and there could be more in the pockets of his tactical vest. Is it wise to take a closer look?"
                 ]
             elif self.room_type_enum == ENUM_ROOM_NIFFY_CORRIDOR_SR_EAST:
                 self.cover = 1
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_TECH_BASIC] = 1
+                self.room_name = "NIFFY SR CORRIDOR E"
 
                 self.directional_dict["EAST"] = ENUM_DOOR_LOCKED
-                self.directional_dict["WEST"] = ENUM_DOOR_JAMMED
+                self.directional_dict["WEST"] = ENUM_DOOR_UNLOCKED
 
                 self.unpowered_room_desc = [
                     "There's an NPC in this room."
@@ -174,5 +188,75 @@ class Room:
             self.scavenge_resource_list.append(-1)
 
         return food_total, ammo_total, basic_tech_total, advanced_tech_total, fuel_total, credits_total
+
+    def print_scavenge_list_item(self):
+        item_found = False
+        items_found_str = "There are the following items in this room:\n"
+        if len(self.scavenge_resource_list) >= ENUM_SCAVENGE_TOTAL_RESOURCES+1:
+            for i in range(ENUM_SCAVENGE_TOTAL_RESOURCES,len(self.scavenge_resource_list)):
+                if isinstance(self.scavenge_resource_list[i], Item):
+                    item_found = True
+                    items_found_str += self.scavenge_resource_list[i].item_name+"\n"
+
+        if item_found:
+            print(items_found_str)
+
+    def add_or_remove_char_to_room_list(self,char_id,add_boolean):
+        if isinstance(char_id, Character):
+            #Find array to use:
+            if char_id.char_team_enum == ENUM_CHAR_TEAM_PC:
+                if not isinstance(self.pcs_in_room_list, list):
+                    self.pcs_in_room_list = []
+                ar_to_use = self.pcs_in_room_list
+            elif char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+                if not isinstance(self.enemies_in_room_list, list):
+                    self.enemies_in_room_list = []
+                ar_to_use = self.enemies_in_room_list
+            else:
+                if not isinstance(self.neutrals_in_room_list, list):
+                    self.neutrals_in_room_list = []
+                ar_to_use = self.neutrals_in_room_list
+
+            #Append to end of list:
+            if add_boolean:
+                ar_to_use.append(char_id)
+
+            #Del element position from list:
+            else:
+                for i in range(0,len(ar_to_use)):
+                    if isinstance(ar_to_use[i], Character) and ar_to_use[i] == char_id:
+                        del ar_to_use[i]
+        else:
+            print(f"A non-character object was fed to the method add_chars_to_room_list for room with name: {self.room_name}")
+
+    def print_char_list(self,char_team_enum):
+        if char_team_enum == ENUM_CHAR_TEAM_PC:
+            ar_to_use = self.pcs_in_room_list
+        elif char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+            ar_to_use = self.enemies_in_room_list
+        else:
+            ar_to_use = self.neutrals_in_room_list
+
+        if isinstance(ar_to_use, list) and len(ar_to_use) > 0:
+            if ar_to_use == self.pcs_in_room_list:
+                print("There are the following friendly characters in this room:")
+                for i in range(0,len(ar_to_use)):
+                    print(f"{ar_to_use[i].name}")
+                print("")
+            else:
+                team_str = "enemy"
+                if char_team_enum == ENUM_CHAR_TEAM_NEUTRAL:
+                    team_str = "neutral"
+                # Count occurrences by name using Counter obj from importants
+                name_counts = Counter(char.name for char in ar_to_use)
+                # Print results
+                print(f"There are the following {team_str} characters in this room:")
+                for name, count in name_counts.items():
+                    plural_str = ""
+                    if count > 1:
+                        plural_str = f"({count})"
+                    print(f"{name} {plural_str}")
+                print("")
+
 
 
