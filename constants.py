@@ -1,6 +1,6 @@
 
 
-TOTAL_LINE_W = 150
+TOTAL_LINE_W = 140
 
 NIFFY_W = 26*2
 NIFFY_H = 26*2
@@ -10,6 +10,11 @@ GAME_STATE_MAIN = 1
 GAME_STATE_ACCESS_INV = 2
 GAME_STATE_PRINT_BIO = 3
 GAME_STATE_PASSING_ITEM = 4
+GAME_STATE_COMBAT_ASSIGN_COMMAND = 5
+GAME_STATE_COMBAT_TARGET_RANK = 6
+GAME_STATE_COMBAT_EXECUTE_ACTION = 7
+GAME_STATE_INITIALIZING_NEW_TURN = 8
+GAME_STATE_COMBAT_CHOOSE_ATTACK = 9
 
 ENUM_LOCATION_NIFFY = 0
 ENUM_LOCATION_PLANET = 1
@@ -99,10 +104,24 @@ ENUM_ITEM_CIVILIAN_JUMPSUIT = 32
 ENUM_ITEM_FLAK_ARMOR = 33
 ENUM_ITEM_ADRENAL_PEN = 34
 ENUM_ITEM_TARGETING_HUD = 35
-ENUM_ITEM_TOTAL_ITEMS = 36
+ENUM_ITEM_STUN_BATON = 36
+ENUM_ITEM_POLICE_TRUNCHEON = 37
+ENUM_ITEM_RIOT_SHIELD = 38
+ENUM_ITEM_FLAK_SHIELD = 39
+ENUM_ITEM_PHASE_SHIELD = 40
+ENUM_ITEM_PLASMA_TORCH = 41 #Doubles as a decent melee weapon
+ENUM_ITEM_FISTS_CHILD = 42
+ENUM_ITEM_FISTS_ADULT = 43
+ENUM_ITEM_FISTS_GIANT = 44
+
+ENUM_ITEM_STEEL_CLUB = 42 #Can only be obtained by manufacturing; probably won't implement
+ENUM_ITEM_STEEL_SPEAR = 43 #Can only be obtained by manufacturing; probably won't implement
+ENUM_ITEM_STEEL_SWORD = 44 #Can only be obtained by manufacturing; probably won't implement
+
+ENUM_ITEM_TOTAL_ITEMS = 45
 
 ENUM_CHARACTER_MERCENARY_MECH = 0 #Sec - Comes equipped with built-in hand-flamer, laser, and wrist rockets which use ability points rather than ammunition.
-ENUM_CHARACTER_GAMER = 1 #Survivor - Hacker, gamer, a girl
+ENUM_CHARACTER_GAMER = 1 #Survivor - Hacker, gamer, a girl; only character that is small enough to use vents. Is better at hiding than other characters.
 ENUM_CHARACTER_ENGINEER = 2 #Engineer - Can interact with engineering bay in useful ways.
 ENUM_CHARACTER_MECH_MAGICIAN = 3 #Engineer - A 'summoner': Can transform scrap into useful droids.
 ENUM_CHARACTER_SCIENTIST = 4 #Scientist
@@ -150,8 +169,9 @@ ENUM_HAZARD_ELECTRIC_CURRENT = 3
 
 ENUM_EQUIP_SLOT_BODY = 0
 ENUM_EQUIP_SLOT_ACCESSORY = 1
-ENUM_EQUIP_SLOT_HANDS = 2
-ENUM_EQUIP_SLOT_TOTAL_SLOTS = 3 #Any element at or beyond this index in the character.inv_list should be considered to be an instance of an item.
+ENUM_EQUIP_SLOT_RH = 2
+ENUM_EQUIP_SLOT_LH = 3
+ENUM_EQUIP_SLOT_TOTAL_SLOTS = 4 #Any element at or beyond this index in the character.inv_list should be considered to be an instance of an item.
 
 ENUM_ITEM_STAT_BOOST_SECURITY = 0
 ENUM_ITEM_STAT_BOOST_ENGINEERING = 1
@@ -191,7 +211,18 @@ ENUM_RANK_ENEMY_NEAR = 2
 ENUM_RANK_PC_NEAR = 3
 ENUM_RANK_PC_MIDDLE = 4
 ENUM_RANK_PC_FAR = 5
+ENUM_RANK_TOTAL_RANKS = 6
 
+ENUM_AI_COMBAT_STANDARD = 0
+ENUM_AI_COMBAT_MELEE = 1
+ENUM_AI_COMBAT_RANGED = 2
+
+#In general, for any stat, 7 (which represents a 70% chance) should be average
+ENUM_AVERAGE_ACCURACY_SCORE = 7
+ENUM_AVERAGE_EVASION_SCORE = 0
+ENUM_MIN_COMBAT_RAN_NUM = 0 #Should also be used for skill checks
+ENUM_MAX_COMBAT_RAN_NUM = 9
+ENUM_MAX_RAN_INITIATIVE_VAL = 7
 
 
 

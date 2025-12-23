@@ -1,7 +1,6 @@
 
 from constants import *
 from models.item import Item
-from util.utils import *
 
 import random
 import textwrap
@@ -16,8 +15,11 @@ class Character:
         self.intelligence = 0
         self.wisdom = 0
         self.dexterity = 0
-        self.accuracy = 0
-        self.stealth = 0
+        self.accuracy = ENUM_AVERAGE_ACCURACY_SCORE
+        self.stealth = 0 #When you consider that rooms add or subtract to this value based upon their cover amount, the average here can be lower than 7
+        self.speed = 0
+
+        self.ran_init_val = 0 #A random value assigned that helps determine when characters act in combat
 
         self.security = 0
         self.engineering = 0
@@ -32,7 +34,7 @@ class Character:
         self.sanity_max = 0
 
         self.armor = 0
-        self.evasion = 0
+        self.evasion = ENUM_AVERAGE_EVASION_SCORE
         self.res_fire = 0
         self.res_vacuum = 0
         self.res_gas = 0
@@ -42,10 +44,18 @@ class Character:
         self.max_action_points = 2
 
         self.inv_list = []
+        self.ability_list = -1
 
         self.char_team_enum = char_team_enum
 
         self.name = "Not defined"
+        self.char_pronoun = "he"
+
+        self.starting_combat_rank = ENUM_RANK_PC_MIDDLE
+        self.participated_in_new_turn_battle = False
+        self.combat_ai_preference = ENUM_AI_COMBAT_STANDARD
+        self.chosen_weapon = -1
+        self.targeted_rank = -1
 
         # Initialize inv_list and nested ENUM_EQUIP_BACKLIST_LIST:
         for i in range(0 ,ENUM_EQUIP_SLOT_TOTAL_SLOTS):
@@ -67,23 +77,27 @@ class Character:
             self.sanity_max = 10
 
             self.engineering = 1
-            self.security = 5
+            self.security = 9
             self.science = 0
             self.scavenging = 0
             self.stealth = 0
 
-            self.strength = 7
-            self.intelligence = 0
-            self.wisdom = 1
+            self.strength = 10
+            self.intelligence = 1
+            self.wisdom = 2
             self.dexterity = 0
+            self.speed = -1
 
             self.armor = 1
+
+            self.accuracy = ENUM_AVERAGE_ACCURACY_SCORE-2 #Worse than average accuracy, only hits about 50% of the time, on average
+            self.evasion = ENUM_AVERAGE_EVASION_SCORE-1 #Worse than average evasion
 
             # Starting equipment:
             # item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             # self.equip_item(item_to_equip,item_to_equip.equip_slot_enum,True)
-            item_to_equip = Item(ENUM_ITEM_SUIT_MARINE)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum, True)
+            item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
+            self.equip_item(item_to_equip, -1, True)
 
         elif char_type_enum == ENUM_CHARACTER_BIOLOGIST:
             self.name = "Revita, 'The Biologist'"
@@ -98,16 +112,18 @@ class Character:
             self.security = 0
             self.science = 5
             self.scavenging = 0
-            self.stealth = 2
+            self.stealth = 5
 
             self.strength = 0
-            self.intelligence = 5
-            self.wisdom = 3
-            self.dexterity = 0
+            self.intelligence = 8
+            self.wisdom = 6
+            self.dexterity = 2
+
+            self.char_pronoun = "she"
 
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_MEDICAL_SCRUBS)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
             item_to_equip = Item(ENUM_ITEM_MEDKIT)
             self.add_item_to_backpack(item_to_equip, True)
 
@@ -124,18 +140,18 @@ class Character:
             self.security = 0
             self.science = 2
             self.scavenging = 0
-            self.stealth = 1
+            self.stealth = 5
 
             self.strength = 2
-            self.intelligence = 2
-            self.wisdom = 3
+            self.intelligence = 6
+            self.wisdom = 6
             self.dexterity = 1
 
             # Starting equipment
             # item_to_equip = Item(ENUM_ITEM_ENGINEER_GARB)
             # self.equip_item(item_to_equip, item_to_equip.equip_slot_enum,True)
-            item_to_equip = Item(ENUM_ITEM_SUIT_ENVIRONMENTAL)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum, True)
+            item_to_equip = Item(ENUM_ITEM_ENGINEER_GARB)
+            self.equip_item(item_to_equip, -1, True)
 
         elif char_type_enum == ENUM_CHARACTER_JANITOR:
             self.name = "Johns, 'The Janitor'"
@@ -147,19 +163,20 @@ class Character:
             self.sanity_max = 6
 
             self.engineering = 2
-            self.security = 0
-            self.science = 0
+            self.security = 2
+            self.science = 2
             self.scavenging = 5
-            self.stealth = 4
+            self.stealth = 7
 
             self.strength = 2
-            self.intelligence = 2
-            self.wisdom = 2
+            self.intelligence = 4
+            self.wisdom = 4
             self.dexterity = 2
+            self.speed = 1
 
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_ENGINEER_GARB)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
 
         elif char_type_enum == ENUM_CHARACTER_MECH_MAGICIAN:
             self.name = "Avia, 'The Mechanician'"
@@ -170,25 +187,28 @@ class Character:
             self.sanity_cur = 10
             self.sanity_max = 10
 
-            self.engineering = 3
+            self.engineering = 7
             self.security = 1
             self.science = 2
             self.scavenging = 1
-            self.stealth = 2
+            self.stealth = 5
 
             self.strength = 1
-            self.intelligence = 3
-            self.wisdom = 3
-            self.dexterity = 1
+            self.intelligence = 7
+            self.wisdom = 7
+            self.dexterity = 3
+            self.speed = 2
 
             self.res_fire = 50
             self.res_vacuum = 50
             self.res_gas = 50
             self.res_electric = -50
 
+            self.char_pronoun = "she"
+
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
 
         elif char_type_enum == ENUM_CHARACTER_MERCENARY_MECH:
             self.name = "Torvald, 'The Cyborg'"
@@ -199,16 +219,17 @@ class Character:
             self.sanity_cur = 10
             self.sanity_max = 10
 
-            self.engineering = 1
-            self.security = 4
+            self.engineering = 3
+            self.security = 8
             self.science = 1
             self.scavenging = 1
-            self.stealth = 1
+            self.stealth = 4
 
-            self.strength = 4
-            self.intelligence = 2
-            self.wisdom = 1
-            self.dexterity = 1
+            self.strength = 8
+            self.intelligence = 3
+            self.wisdom = 3
+            self.dexterity = 3
+            self.speed = 1
 
             self.armor = 1
 
@@ -219,7 +240,7 @@ class Character:
 
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
 
         elif char_type_enum == ENUM_CHARACTER_SOLDIER:
             self.name = "Cooper, 'The Security Guard'"
@@ -227,27 +248,27 @@ class Character:
             self.hp_cur = 10
             self.ability_points_cur = 14
             self.ability_points_max = 14
-            self.sanity_cur = 9
-            self.sanity_max = 9
+            self.sanity_cur = 8
+            self.sanity_max = 8
 
             self.engineering = 1
-            self.security = 4
+            self.security = 7
             self.science = 0
             self.scavenging = 2
-            self.stealth = 1
+            self.stealth = 5
 
-            self.strength = 3
+            self.strength = 7
             self.intelligence = 1
             self.wisdom = 2
             self.dexterity = 2
 
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_FLAK_ARMOR)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
             item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
             item_to_equip = Item(ENUM_ITEM_TARGETING_HUD)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum, True)
+            self.equip_item(item_to_equip, -1, True)
             item_to_equip = Item(ENUM_ITEM_BALLISTIC_PISTOL)
             self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_TASER)
@@ -257,6 +278,8 @@ class Character:
             item_to_equip = Item(ENUM_ITEM_ADRENAL_PEN)
             self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_SUIT_MARINE)
+            self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_RIOT_SHIELD)
             self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_SCIENTIST:
@@ -268,19 +291,19 @@ class Character:
             self.sanity_cur = 6
             self.sanity_max = 6
 
-            self.engineering = 0
+            self.engineering = 2
             self.security = 0
             self.science = 6
             self.scavenging = 1
-            self.stealth = 3
+            self.stealth = 4
 
-            self.strength = 3
-            self.intelligence = 1
-            self.wisdom = 2
+            self.strength = 0
+            self.intelligence = 9
+            self.wisdom = 9
             self.dexterity = 2
 
             item_to_equip = Item(ENUM_ITEM_SCIENTIST_LABCOAT)
-            self.equip_item(item_to_equip ,item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip ,-1,True)
 
         elif char_type_enum == ENUM_CHARACTER_CRIMINAL:
             self.name = "Emeran, 'The Criminal'"
@@ -291,19 +314,22 @@ class Character:
             self.sanity_cur = 9
             self.sanity_max = 9
 
-            self.engineering = 0
-            self.security = 3
-            self.science = 0
+            self.engineering = 2
+            self.security = 6
+            self.science = 2
             self.scavenging = 4
-            self.stealth = 4
+            self.stealth = 8
+            self.speed = 2
 
             self.strength = 4
             self.intelligence = 0
             self.wisdom = 0
             self.dexterity = 4
 
+            self.evasion = ENUM_AVERAGE_EVASION_SCORE + 1  # Better than average at evading
+
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
-            self.equip_item(item_to_equip ,item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip ,-1,True)
 
         elif char_type_enum == ENUM_CHARACTER_SERVICE_DROID:
             self.name = "RG-88, 'Service Droid'"
@@ -314,16 +340,17 @@ class Character:
             self.sanity_cur = 10
             self.sanity_max = 10
 
-            self.engineering = 3
-            self.security = 2
-            self.science = 3
+            self.engineering = 6
+            self.security = 6
+            self.science = 6
             self.scavenging = 0
-            self.stealth = 0
+            self.stealth = 4
+            self.speed = 1
 
-            self.strength = 0
+            self.strength = 9
             self.intelligence = 4
-            self.wisdom = 4
-            self.dexterity = 0
+            self.wisdom = 8
+            self.dexterity = 2
 
             self.res_fire = 100
             self.res_vacuum = 100
@@ -339,19 +366,20 @@ class Character:
             self.sanity_cur = 4
             self.sanity_max = 4
 
-            self.engineering = 2
+            self.engineering = 3
             self.security = 0
-            self.science = 2
+            self.science = 3
             self.scavenging = 3
-            self.stealth = 2
+            self.stealth = 6
+            self.speed = 1
 
             self.strength = 1
             self.intelligence = 3
-            self.wisdom = 2
-            self.dexterity = 1
+            self.wisdom = 4
+            self.dexterity = 2
 
             item_to_equip = Item(ENUM_ITEM_OFFICER_JUMPSUIT)
-            self.equip_item(item_to_equip ,item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip ,-1,True)
 
         elif char_type_enum == ENUM_CHARACTER_GAMER:
             self.name = "Kira, 'The Gamer'"
@@ -366,15 +394,20 @@ class Character:
             self.security = 0
             self.science = 1
             self.scavenging = 5
-            self.stealth = 5
+            self.stealth = 10
+            self.speed = 3
 
             self.strength = 0
             self.intelligence = 2
             self.wisdom = 1
-            self.dexterity = 5
+            self.dexterity = 7
+
+            self.evasion = ENUM_AVERAGE_EVASION_SCORE+1 #Better than average at evading
+
+            self.char_pronoun = "she"
 
             item_to_equip = Item(ENUM_ITEM_CIVILIAN_JUMPSUIT)
-            self.equip_item(item_to_equip ,item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip ,-1,True)
 
         elif char_type_enum == ENUM_CHARACTER_PLAYBOY:
             self.name = "Oberon, 'The Playboy'"
@@ -385,19 +418,20 @@ class Character:
             self.sanity_cur = 3
             self.sanity_max = 3
 
-            self.engineering = 0
-            self.security = 0
-            self.science = 0
+            self.engineering = 1
+            self.security = 1
+            self.science = 1
             self.scavenging = 3
-            self.stealth = 3
+            self.stealth = 6
+            self.speed = 1
 
-            self.strength = 2
+            self.strength = 3
             self.intelligence = 2
             self.wisdom = 1
-            self.dexterity = 3
+            self.dexterity = 5
 
             item_to_equip = Item(ENUM_ITEM_CIVILIAN_JUMPSUIT)
-            self.equip_item(item_to_equip ,item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip ,-1,True)
 
         elif char_type_enum == ENUM_CHARACTER_NEUTRAL_INFECTED_SCIENTIST:
             self.name = "Gregos, 'The Researcher'"
@@ -408,9 +442,22 @@ class Character:
             self.sanity_cur = 2
             self.sanity_max = 2
 
+            self.engineering = 4
+            self.security = 0
+            self.science = 9
+            self.scavenging = 1
+            self.stealth = 4
+
+            self.strength = 2
+            self.intelligence = 8
+            self.wisdom = 8
+            self.dexterity = 2
+
+            starting_combat_rank = ENUM_RANK_PC_NEAR
+
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_SCIENTIST_LABCOAT)
-            self.equip_item(item_to_equip, item_to_equip.equip_slot_enum ,True)
+            self.equip_item(item_to_equip, -1,True)
 
         elif char_type_enum == ENUM_CHARACTER_ENEMY_SKITTERING_LARVA:
             self.name = "Skittering Larva"
@@ -420,6 +467,7 @@ class Character:
             self.ability_points_max = 3
             self.sanity_cur = 20
             self.sanity_max = 20
+            self.speed = 4
 
             self.armor = 0
             self.evasion = 3
@@ -427,6 +475,8 @@ class Character:
             self.res_vacuum = 100
             self.res_gas = 100
             self.res_electric = 0
+
+            self.starting_combat_rank = ENUM_RANK_ENEMY_NEAR
 
         elif char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER:
             self.name = "Lumbering Mauler"
@@ -444,6 +494,10 @@ class Character:
             self.res_gas = 100
             self.res_electric = 0
 
+            self.speed = -1
+
+            self.starting_combat_rank = ENUM_RANK_ENEMY_MIDDLE
+
         elif char_type_enum == ENUM_CHARACTER_ENEMY_SPINED_SPITTER:
             self.name = "Spined Spitter"
             self.hp_max = 10
@@ -460,6 +514,9 @@ class Character:
             self.res_gas = 100
             self.res_electric = 0
 
+            self.speed = 1
+
+            self.starting_combat_rank = ENUM_RANK_ENEMY_FAR
 
     # endregion
 
@@ -467,33 +524,32 @@ class Character:
 
         print(f"{self.name} is wearing and carrying the following items:")
 
-        # Print body slot:
-        item_slot_str = "Nothing"
-        if isinstance(self.inv_list[ENUM_EQUIP_SLOT_BODY], Item):
-            item_slot_str = self.inv_list[ENUM_EQUIP_SLOT_BODY].item_name
-        print(f"Wearing on body: 0.) {item_slot_str}")
+        for i in range(0,len(self.inv_list)):
 
-        # Print accessory slot:
-        item_slot_str = "Nothing"
-        if isinstance(self.inv_list[ENUM_EQUIP_SLOT_ACCESSORY], Item):
-            item_slot_str = self.inv_list[ENUM_EQUIP_SLOT_ACCESSORY].item_name
-        print(f"Also wearing: 1.) {item_slot_str}")
+            #Set default as nothing
+            intro_str = ""
 
-        # Print Hands slot:
-        item_slot_str = "Nothing"
-        if isinstance(self.inv_list[ENUM_EQUIP_SLOT_HANDS], Item):
-            item_slot_str = self.inv_list[ENUM_EQUIP_SLOT_HANDS].item_name
-        print(f"Wielding in hands: 2.) {item_slot_str}")
+            if i == ENUM_EQUIP_SLOT_BODY:
+                intro_str = f"Wearing on body: "
+            elif i == ENUM_EQUIP_SLOT_ACCESSORY:
+                intro_str = f"Wearing as accessory: "
+            elif i == ENUM_EQUIP_SLOT_RH:
+                intro_str = f"Wielding in right hand: "
+            elif i == ENUM_EQUIP_SLOT_LH:
+                intro_str = f"Wielding in left hand: "
 
-        # Print backpack items
-        print("They are carrying on their person:")
+            if i == ENUM_EQUIP_SLOT_TOTAL_SLOTS:
+                print("They are carrying on their person:")
 
-        for i in range(ENUM_EQUIP_SLOT_TOTAL_SLOTS ,len(self.inv_list)):
-            if isinstance(self.inv_list[i], Item): # If there's actually an item here
-                print(f"{i}.) {self.inv_list[i].item_name}")
+            if isinstance(self.inv_list[i], Item):
+                intro_str += f"{i}.) {self.inv_list[i].item_name}. "
+                if self.inv_list[i].slot_designation_str == "Accessory":
+                    equip_slot_str = f"({self.inv_list[i].slot_designation_str})"
+                    intro_str += f"{equip_slot_str}"
             else:
-                # print for debug purposes:
-                print(f"{self.inv_list[i]}")
+                intro_str += f"{i}.) Nothing."
+
+            print(intro_str)
 
         print("")
         print \
@@ -504,9 +560,29 @@ class Character:
             ("Or 'D{ITEM NUMBER} to drop the item back into your current room (you could retrieve it again with 'SCAVENGE').")
         print("Enter your selection now >")
 
-    def equip_item(self ,item_inst_id ,item_index ,starting_equip_boolean = False):
-        if item_inst_id.equip_slot_enum != -1:
-            self.inv_list[item_inst_id.equip_slot_enum] = item_inst_id
+    #item_index: indicates which BACKPACK SLOT this item should be removed from (-1 works fine when equipping starting kit); item_inst_id: indicates the item being equipped.
+    def equip_item(self ,item_inst_id, item_index ,starting_equip_boolean = False):
+        if isinstance(item_inst_id.equip_slot_list,list):
+            #Iterate through equip_slot_list, matching with corresponding empty positions in the self.inv_list;
+            #The first empty applicable slot we find, we'll add our item to position.
+            item_equipped = False
+            for i in range(0,len(item_inst_id.equip_slot_list)):
+                if isinstance(item_inst_id.equip_slot_list[i], list):
+                    for nested_i in range(0,len(item_inst_id.equip_slot_list[i])):
+                        item_equip_slot_enum = item_inst_id.equip_slot_list[i][nested_i]
+                        if self.inv_list[item_equip_slot_enum] == -1: #We don't include this break here so that a copy of the item will be placed in both empty hand slots
+                            self.inv_list[item_equip_slot_enum] = item_inst_id
+                            item_equipped = True
+
+                if item_equipped:
+                    break
+
+                item_equip_slot_enum = item_inst_id.equip_slot_list[i]
+                if self.inv_list[item_equip_slot_enum] == -1:
+                    self.inv_list[item_equip_slot_enum] = item_inst_id
+                    item_equipped = True
+                    break
+
             # Only remove from backpack if item_index points to a backpack slot; this is necessary because when we're adding an item
             # for the first time as part of a character's starting kit, it doesn't yet exist as one of the 'backpack slots'
             if item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS and item_index < len(self.inv_list):
@@ -515,21 +591,29 @@ class Character:
         else:
             print \
                 (f"equip_item method for {self.name} with item: {item_inst_id.item_name}, equip_slot_enum == -1, which means we're trying to equip an item that is not equippable, something went wrong.")
-        if not starting_equip_boolean:
-            print(f"{self.name} has equipped the {item_inst_id.item_name}")
-        if item_inst_id.changes_stats_boolean:
-            self.change_char_stats(item_inst_id, True ,starting_equip_boolean)
+        if item_equipped:
+            if not starting_equip_boolean:
+                print(f"{self.name} has equipped the {item_inst_id.item_name}")
+            if item_inst_id.changes_stats_boolean:
+                self.change_char_stats(item_inst_id, True ,starting_equip_boolean)
+        else:
+            print(f"equip_item method for {self.name} with item: {item_inst_id.item_name}, we entered this method and yet could not equip the item, something went very wrong.")
 
-    def unequip_item(self ,item_inst_id ,starting_equip_boolean = False):
-        # Remove from current list position, add to end of list:
-        self.inv_list[item_inst_id.equip_slot_enum] = -1
+    def unequip_item(self ,item_inst_id, item_index, starting_equip_boolean = False):
+        # Remove from corresponding self.inv_list position:
+        self.inv_list[item_index] = -1
+        # Check to see if this item has a nested list, which indicates that it is a two-handed item;
+        # If it is, then be sure to remove from both hand slots:
+        if isinstance(item_inst_id.equip_slot_list[0],list):
+            self.inv_list[ENUM_EQUIP_SLOT_RH] = -1
+            self.inv_list[ENUM_EQUIP_SLOT_LH] = -1
         # add to end of list:
         self.inv_list.append(item_inst_id)
         print(f"{self.name} has unequipped the {item_inst_id.item_name}")
         if item_inst_id.changes_stats_boolean:
-            self.change_char_stats(item_inst_id, False ,starting_equip_boolean)
+            self.change_char_stats(item_inst_id, False, starting_equip_boolean)
 
-    def swap_equip_item(self ,first_item_id ,first_item_index ,second_item_id ,second_item_index
+    def defunct_swap_equip_item(self ,first_item_id ,first_item_index ,second_item_id ,second_item_index
                         ,starting_equip_boolean = False):
         self.inv_list[first_item_index] = second_item_id
         self.inv_list[second_item_index] = first_item_id
@@ -689,3 +773,43 @@ class Character:
         char_stats_str = textwrap.fill(char_stats_str, TOTAL_LINE_W)
         print(char_stats_str)
         print("")
+
+    def check_valid_item_equip(self,item_id_to_equip):
+        #It's a list:
+        if isinstance(item_id_to_equip.equip_slot_list,list):
+            #Before iterating through the list, set this == False
+            invalid_equip_found = False
+            #Iterate through our outer list - applicable for all items
+            for i in range(0,len(item_id_to_equip.equip_slot_list)):
+                #Check to see if there is a nested_list here; if there is, it indicates a two-handed item:
+                if isinstance(item_id_to_equip.equip_slot_list[i], list):
+                    #In this case we're checking a two-handed item, so if ANY of the equip_slot positions in the char inv_list are filled, return false.
+                    for nested_i in range(0,len(item_id_to_equip.equip_slot_list[i])):
+                        item_equip_slot = item_id_to_equip.equip_slot_list[i][nested_i]
+                        if self.inv_list[item_equip_slot] != -1:
+                            print("This item requires two hands to wield; make sure that both of your hands are free before equipping.")
+                            invalid_equip_found = True
+                            return False
+                        #If we iterate through this list and the last corresponding item_equip_slot on the char_inv_list
+                        #is still == -1, then this is a valid equip, we can return true now:
+                        elif self.inv_list[item_equip_slot] == -1 and nested_i == len(item_id_to_equip.equip_slot_list[i])-1:
+                            print(
+                                "Debug only: check_valid_item_equip returning TRUE for a two-handed item.")
+                            return True
+
+                if invalid_equip_found:
+                    break
+
+                #In this case we're checking for a ONE handed item, so if ANY of the corresponding equip slots in the
+                # char inv_list are empty, return TRUE
+                item_equip_slot = item_id_to_equip.equip_slot_list[i]
+                if self.inv_list[item_equip_slot] == -1:
+                    print("Debug only: check_valid_item_equip returning TRUE for one-handed item, body item, or accessory item.")
+                    return True
+        else: #Else: It must therefore == -1
+            print(f"The {item_id_to_equip.item_name} is not an item that can be equipped.")
+            return False
+
+        #print(f"check_valid_item_equip method for char_inst {self.name}, for item name: {item_id_to_equip.item_name}, none of our conditions executed, something likely went wrong, returning False.")
+        print(f"Can't equip the {item_id_to_equip.item_name}--make sure that the corresponding equipment slot is free.")
+        return False

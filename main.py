@@ -4,35 +4,36 @@ from models.character import Character
 from models.item import Item
 from models.room import Room
 from util.utils import *
+from models.abil import Abil
 
 #Import built-in python modules:
 import random
 import textwrap
 import keyboard
 import string
+from collections import Counter
 
 if __name__ == '__main__':
-
-    escape_was_pressed = False
-
-    def handle_escape_release(event):
-        global escape_was_pressed
-        escape_was_pressed = True
 
     #region Define global vars:
 
     game_end = False
     print_room_recap = True
+    choose_weapon_boolean = False
+    choose_ability_boolean = False
 
     cur_char = -1
     cur_char_index = 0
     cur_grid_to_use = -1
     cur_room_inst_id = -1
+    new_turn_cur_char_index = 0 #Used for iterating through pc_char_list at the start of turn, determining whether or not we need to start a fight with enemies
+    cur_combat_room_id = -1
 
     passing_item_id = -1 #Used with GAME_STATE_PASSING_ITEM
     passing_item_index = -1 #Used with GAME_STATE_PASSING_ITEM
 
     cur_game_state = GAME_STATE_CHOOSE_CHARS
+    prev_game_state = GAME_STATE_INITIALIZING_NEW_TURN
 
     #Global resources:
     basic_tech_total = 0
@@ -41,6 +42,11 @@ if __name__ == '__main__':
     food_total = 0
     fuel_total = 0 #Called 'neutronium' fuel, used for niffy engine
     ammo_total = 0
+
+    combat_initiative_list = -1
+    cur_combat_char_index = -1
+    cur_combat_round = 0
+    combat_rank_list = -1
 
     #endregion
 
@@ -72,14 +78,15 @@ if __name__ == '__main__':
 
     #region Debug placeholder: Add some random enemies and neutral chars to the starting room:
         # char_type_enum, spawn_grid_x, spawn_grid_y, spawn_grid, char_team_enum
-    debug_chars = False
+    debug_chars = True
     if debug_chars:
-        for i in range(0,3):
+        ammo_total += 20
+        for i in range(0,1):
             neutral_char_list.append(Character(ENUM_CHARACTER_NEUTRAL_INFECTED_SCIENTIST,origin_grid_x,origin_grid_y,location_grid_niffy,
                                                ENUM_CHAR_TEAM_NEUTRAL))
             location_grid_niffy[origin_grid_y][origin_grid_x].add_or_remove_char_to_room_list(neutral_char_list[len(neutral_char_list)-1],True)
 
-        for i in range(1,random.randint(2,13)):
+        for i in range(0,random.randint(1,1)):
 
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, origin_grid_x, origin_grid_y, location_grid_niffy,
@@ -88,7 +95,7 @@ if __name__ == '__main__':
             location_grid_niffy[origin_grid_y][origin_grid_x].add_or_remove_char_to_room_list(
                 enemy_char_list[len(enemy_char_list) - 1], True)
 
-        for i in range(1, random.randint(2, 13)):
+        for i in range(0, random.randint(1, 1)):
 
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_LUMBERING_MAULER, origin_grid_x, origin_grid_y, location_grid_niffy,
@@ -97,7 +104,7 @@ if __name__ == '__main__':
             location_grid_niffy[origin_grid_y][origin_grid_x].add_or_remove_char_to_room_list(
                 enemy_char_list[len(enemy_char_list) - 1], True)
 
-        for i in range(1, random.randint(2, 13)):
+        for i in range(0, random.randint(1, 1)):
 
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_SPINED_SPITTER, origin_grid_x, origin_grid_y, location_grid_niffy,
@@ -320,7 +327,7 @@ if __name__ == '__main__':
                             #Define cur_char:
                             cur_char = pc_char_list[0]
                             #change game state:
-                            cur_game_state = GAME_STATE_MAIN
+                            cur_game_state = GAME_STATE_INITIALIZING_NEW_TURN
 
         #endregion for game_state == choose_chars
 
@@ -343,6 +350,241 @@ if __name__ == '__main__':
             cur_game_state = GAME_STATE_CHOOSE_CHARS
 
         #endregion
+
+        #region game_state == INITIALIZING NEW TURN
+
+        elif cur_game_state == GAME_STATE_INITIALIZING_NEW_TURN:
+
+            #Iterate through every pc char, if they have already participated in a battle and there's enemies in their
+            #room, then start a battle:
+            combat_begun = False
+            for i in range(0,len(pc_char_list)):
+                new_turn_cur_char_index = i
+                pc_inst = pc_char_list[i]
+                occupying_grid_id = pc_inst.current_grid
+                cur_combat_room_id =  occupying_grid_id[pc_inst.cur_grid_y][pc_inst.cur_grid_x]
+                if isinstance(cur_combat_room_id.enemies_in_room_list,list) and len(cur_combat_room_id.enemies_in_room_list) > 0:
+                    if pc_inst.participated_in_new_turn_battle == False:
+                        print(f"There are enemies in the {cur_combat_room_id.room_name} that have discovered {pc_inst.name}! You have no choice now--you have to fight to save yourself!\n")
+                        #Setup combat_initiative_list:
+                        combat_initiative_list = -1
+                        combat_initiative_list = []
+                        combat_initiative_list = fill_combat_initiative_list(cur_combat_room_id)
+                        #Organize by speed + random_int(0,6)
+                        combat_initiative_list = organize_initiative_list(combat_initiative_list)
+                        #Create our combat_rank_list:
+                        if isinstance(combat_rank_list,list) == False:
+                            combat_rank_list = []
+                        else:
+                            combat_rank_list.clear()
+                        #organize it by starting positions:
+                        combat_rank_list = organize_combat_rank_list(combat_initiative_list)
+
+                        #Change game state to GAME_STATE_COMBAT_EXECUTE_ACTION or GAME_STATE_COMBAT_ASSIGN_COMMAND,
+                        #depending on pc first or enemy first
+                        if combat_initiative_list[0].char_team_enum == ENUM_CHAR_TEAM_PC:
+                            cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+                        else:
+                            cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
+                        cur_combat_char_index = 0
+                        cur_combat_round = 0
+                        combat_begun = True
+                        break
+
+            #If we completely get through this for loop without a battle being initiated, always set cur_char to first
+            #pc_inst in pc_char_list, then change game state:
+            if not combat_begun:
+                cur_char = pc_char_list[0]
+                prev_game_state = GAME_STATE_MAIN #We'll use this prev_game_state to return to either here or the main game state after combat is concluded
+                cur_game_state = GAME_STATE_MAIN
+
+        #endregion
+
+        #region GAME_STATE_COMBAT_ASSIGN_COMMAND GAME STATE
+
+        elif cur_game_state == GAME_STATE_COMBAT_ASSIGN_COMMAND:
+            #Reset vars for GAME_STATE_COMBAT_CHOOSE_ATTACK game state:
+            choose_weapon_boolean = False
+            choose_ability_boolean = False
+
+            battlefield_summary_str = wrap_str(f"Round {cur_combat_round} of the battle is underway. If you imagine a 'center-line' separating your half of the room from the enemy's half of the room at the start of the battle, this is what you see:",TOTAL_LINE_W,False)
+            print(battlefield_summary_str)
+            print_combat_ranks(combat_rank_list)
+            print("")
+            char_summary_str = wrap_str(f"You are {combat_initiative_list[cur_combat_char_index].name}. "
+                                        f"You have {combat_initiative_list[cur_combat_char_index].hp_cur} hit points out of {combat_initiative_list[cur_combat_char_index].hp_max}. "
+                                        f"You have {combat_initiative_list[cur_combat_char_index].sanity_cur} sanity points out of {combat_initiative_list[cur_combat_char_index].sanity_max},"
+                                        f" {combat_initiative_list[cur_combat_char_index].armor} armor, "
+                                        f"{combat_initiative_list[cur_combat_char_index].evasion} evasion, "
+                                        f"and {combat_initiative_list[cur_combat_char_index].accuracy} accuracy. "
+                                        f"The party has {ammo_total} ammunition between them.",TOTAL_LINE_W,False)
+            print(char_summary_str)
+            print("You have the following commands available to you: 'FIGHT'")
+            input_str = input("Enter a combat command now.> ").upper().strip()
+            print("")
+            if input_str == "FIGHT" or input_str == "F":
+                cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
+                choose_weapon_boolean = True
+            else:
+                print("That is an invalid combat option, try again.")
+
+        #endregion
+
+        #region Choose attack - loads either weapon list (left hand and right hand) or ability list (all combat-usable) abilities:
+
+        elif cur_game_state == GAME_STATE_COMBAT_CHOOSE_ATTACK:
+            ar_to_use = -1
+            desc_str = "undefined"
+            if choose_weapon_boolean:
+                ar_to_use = []
+                desc_str = "Choose equipped weapon"
+                for i in range(ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH+1):
+                    item_id = combat_initiative_list[cur_combat_char_index].inv_list[i]
+                    if isinstance(item_id,Item):
+                        ar_to_use.append(item_id)
+                if len(ar_to_use) == 0:
+                    #Means this char has no equipped items--they'll get the option to use their fists:
+                    if combat_initiative_list[cur_combat_char_index].char_type_enum == ENUM_CHARACTER_GAMER:
+                        fists_item_enum = ENUM_ITEM_FISTS_CHILD
+                    elif combat_initiative_list[cur_combat_char_index].char_type_enum == ENUM_CHARACTER_OGRE:
+                        fists_item_enum = ENUM_ITEM_FISTS_GIANT
+                    else:
+                        fists_item_enum = ENUM_ITEM_FISTS_ADULT
+                    ar_to_use.append(Item(fists_item_enum))
+
+            elif choose_ability_boolean:
+                ar_to_use = []
+                desc_str = "Choose combat ability"
+                for i in range(ENUM_EQUIP_SLOT_RH, ENUM_EQUIP_SLOT_LH + 1):
+                    if isinstance(combat_initiative_list[cur_combat_char_index].ability_list, list):
+                        abil_id = combat_initiative_list[cur_combat_char_index].ability_list[i]
+                        if isinstance(abil_id, Abil):
+                            ar_to_use.append(abil_id)
+            else:
+                print("GAME_STATE_COMBAT_CHOOSE_ATTACK: neither choose_weapon_boolean or choose_abil_boolean == true, something went wrong.")
+
+            #Print the weapon or ability name, index, along with relevant info like max_range, min-max damage
+            for i in range(0,len(ar_to_use)):
+                print(f"{desc_str} {i}.) {ar_to_use[i].item_name}, max_range: {ar_to_use[i].max_range}, min. damage: {ar_to_use[i].dmg_min}, max. damage: {ar_to_use[i].dmg_max}.")
+            print("")
+            input_str = input("Enter the corresponding number associated with the weapon or ability, or enter 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
+            print("")
+            if input_str == "B" or input_str == "BACKUP":
+                cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+            else:
+                try:
+                    input_int = int(input_str)
+                    if input_int >= 0 and input_int < len(ar_to_use):
+                        combat_initiative_list[cur_combat_char_index].chosen_weapon = ar_to_use[input_int]
+                        cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+                    else:
+                        print("You must choose a valid weapon or ability to fight with, try again.")
+                except ValueError:
+                    print("That is an invalid command, try again.")
+
+        # region GAME_STATE_COMBAT_TARGET_RANK
+
+        elif cur_game_state == GAME_STATE_COMBAT_TARGET_RANK:
+            print("Choose which position to target to attack:")
+            print_combat_ranks(combat_rank_list)
+            input_str = input("Enter the corresponding number to choose a position to attack, or 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
+            print("")
+            if input_int == "B" or input_int == "BACKUP":
+                cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+            else:
+                try:
+                    input_int = int(input_str)
+                    if input_int >= 0 and input_int < len(combat_rank_list):
+                        # Create a new list to get only the enemies from this rank:
+                        filtered_enemy_list = []
+                        for i in range(0, len(combat_rank_list[input_int])):
+                            if combat_rank_list[input_int][i].char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+                                filtered_enemy_list.append(combat_rank_list[input_int][i])
+                        if len(filtered_enemy_list) > 0:
+                            combat_initiative_list[cur_combat_char_index].targeted_rank = input_int
+                            cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
+                        else:
+                            print("There are no valid enemy targets in this position to attack, try again.")
+                    else:
+                        print("That is an invalid position to target.")
+                except ValueError:
+                    print("That is an invalid command.")
+
+
+        # endregion
+
+        # region GAME_STATE_COMBAT_EXECUTE_ACTION
+        elif cur_game_state == GAME_STATE_COMBAT_EXECUTE_ACTION:
+
+            attacking_char = combat_initiative_list[cur_combat_char_index]
+            print(f"{attacking_char.name} is acting now...\n")
+
+            if attacking_char.char_team_enum == ENUM_CHAR_TEAM_PC:
+                #Check to see if there's even any enemies in that rank anymore:
+                if len(combat_rank_list[attacking_char.targeted_rank]) > 0:
+                    #Create a new list to get only the enemies from this rank:
+                    filtered_enemy_list = []
+                    for i in range(0,len(combat_rank_list[attacking_char.targeted_rank])):
+                        if combat_rank_list[attacking_char.targeted_rank][i].char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+                            filtered_enemy_list.append(combat_rank_list[attacking_char.targeted_rank][i])
+                    if len(filtered_enemy_list) > 0:
+                        #Choose random enemy in already defined rank:
+                        defending_char = filtered_enemy_list[random.randint(0,len(filtered_enemy_list)-1)]
+                        attacker_hit_val = attacking_char.accuracy - defending_char.evasion
+                        if attacker_hit_val >= random.randint(ENUM_MIN_COMBAT_RAN_NUM,ENUM_MAX_COMBAT_RAN_NUM):
+                            #Hit:
+                            dmg_roll = random.randint(attacking_char.chosen_weapon.dmg_min,attacking_char.chosen_weapon.dmg_max)
+                            total_dmg = max(0,dmg_roll-defending_char.armor)
+                            if total_dmg > 0:
+                                defending_char.hp_cur -= total_dmg
+                                print(f"{defending_char.name} has taken {total_dmg} damage from the attack!")
+                                if defending_char.hp_cur <= 0:
+                                    print(f"{defending_char.name} has been killed!")
+                                    #Remove from combat_rank_list:
+                                    for defending_char in combat_rank_list[attacking_char.targeted_rank]:
+                                        index = combat_rank_list[attacking_char.targeted_rank].index(defending_char)
+                                        del combat_rank_list[attacking_char.targeted_rank][index]
+                                    #Remove from combat_initiative_list:
+                                    for defending_char in combat_initiative_list:
+                                        index = combat_initiative_list.index(defending_char)
+                                        del combat_initiative_list[index]
+                            else:
+                                print(f"{attacking_char.name} hits the {defending_char.name}, but their armor absorbs the damage.")
+                        else:
+                            print(
+                                f"{attacking_char.name} misses the {defending_char.name} with their attack!")
+                    else:
+                        print("There are no valid enemy targets to attack in this position!")
+                else:
+                    print(f"The target has moved positions! {attacking_char.name} misses with their attack!")
+            else:
+                #Execute enemy ai:
+                print("Enemy AI not yet implemented.")
+            #Before advancing to a new char, wipe the char's 'chosen_weapon' var (not strictly necessary but good practice):
+            attacking_char.chosen_weapon = -1
+            #Advance cur_combat_char_index
+            cur_combat_char_index += 1
+            # check to see if we need to fill and reorganize the combat_initiative_list:
+            if cur_combat_char_index >= len(combat_initiative_list):
+                combat_initiative_list = -1
+                combat_initiative_list = []
+                #Setup combat init list
+                combat_initiative_list = fill_combat_initiative_list(cur_combat_room_id)
+                #Organize it by speed:
+                combat_initiative_list = organize_initiative_list(combat_initiative_list)
+                cur_combat_char_index = 0
+                cur_combat_round += 1
+            #Move to assign commands or execute ai
+            if combat_initiative_list[cur_combat_char_index].char_team_enum == ENUM_CHAR_TEAM_PC:
+                cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+            else:
+                cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
+            #In either case, await player input before continuing:
+            print("")
+            continue_str = input("Press enter to continue to the next combatant in the initiative queue.")
+            print("")
+
+        # endregion
 
         #region game_state == main
 
@@ -412,111 +654,139 @@ if __name__ == '__main__':
                 print_room_recap = True
                 print(f"You change control to {cur_char.name}\n")
             #endregion
+
+            #region Display help instructions
             elif input_str == "?" or input_str == "HELP":
                 wrapped_instructions_list = wrap_str(help_instructions_str_list,TOTAL_LINE_W,True)
                 for i in wrapped_instructions_list:
                     print(i)
                 print("")
-            elif input_str.isalpha():
-                #region Check cardinal directions:
-                if (input_str == "W" or input_str == "WEST" or input_str == "N" or input_str == "NORTH" or
-                input_str == "E" or input_str == "EAST" or "S" or input_str == "SOUTH"):
-                    parsed_str = input_str
-                    if input_str == "W":
-                        parsed_str = "WEST"
-                    elif input_str == "E":
-                        parsed_str = "EAST"
-                    elif input_str == "S":
-                        parsed_str = "SOUTH"
-                    elif input_str == "N":
-                        parsed_str = "NORTH"
-                    if parsed_str in cur_room_inst_id.directional_dict:
-                        if (cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_UNLOCKED or
-                        cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_DESTROYED):
-                            if cur_char.cur_action_points > 0:
-                                move_dir_x = 0
-                                move_dir_y = 0
-                                if parsed_str == "WEST":
-                                    move_dir_x = -1
-                                elif parsed_str == "EAST":
-                                    move_dir_x = 1
-                                elif parsed_str == "SOUTH":
-                                    move_dir_y = 1
-                                elif parsed_str == "NORTH":
-                                    move_dir_y = -1
-                                #Change char grid vars:
-                                cur_char.cur_grid_x += move_dir_x
-                                cur_char.cur_grid_y += move_dir_y
-                                print_room_recap = True
-                                cur_char.cur_action_points -= 1
-                                print(f"{cur_char.name} moves {parsed_str}. They now have {cur_char.cur_action_points} action points.")
-                            else:
-                                print("You need at least one action point to move to a different room.")
-                        elif cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_LOCKED:
-                            print(f"The {parsed_str}ERN door is locked.")
-                        elif cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_JAMMED:
-                            print(f"The {parsed_str}ERN door has been thoroughly jammed.")
-                    else:
-                        print("There is a wall in that direction.")
-                elif input_str == "END" or input_str == "END TURN":
-                    #Check for available action points and give a warning if characters still have unused action points:
+            #endregion
 
-                    #Replenish all characters action points:
-                    for i in range(0,len(pc_char_list)):
-                        pc_char_list[i].cur_action_points = pc_char_list[i].max_action_points
-                    print("You've ended your turn, some time has passed.")
-
-                    #Execute crisis events, if applicable:
-
-                    #Grow hazards:
-
-                    #Implement enemy movement ai--including smashing locked or jammed doors,
-                    #and/or indicating to the player that they are in the process of smashing a door:
-
-                elif input_str == "P" or input_str == "PARTY":
-                    for i in range(0,len(pc_char_list)):
-                        print(f"{i}.) {pc_char_list[i].name}")
-                    print("")
-                elif input_str == "EXIT":
-                    print("You have decided to quit the game.")
-                    game_end = True
-                elif input_str == "AMBUSH":
-                    print("Ambush is not yet implemented.")
-                elif input_str == "HIDE":
-                    print("Hide is not yet implemented.")
-                elif input_str == "L" or input_str == "LOOK":
-                    print_room_recap = True
-                    print("You take another look around and assess your situation:")
-                    print("")
-                elif input_str == "STAT" or input_str == "STATS":
-                    cur_char.print_char_stats()
-                elif input_str == "SCAVENGE":
-                    #region Scavenge logic:
-                    room_scavenge_list = cur_grid_to_use[cur_char.cur_grid_y][cur_char.cur_grid_x].scavenge_resource_list
-                    if isinstance(room_scavenge_list, list) and len(room_scavenge_list) > 0:
-                        has_resources_boolean = False
-                        for i in range(0,len(room_scavenge_list)):
-                            if room_scavenge_list[i] != -1:
-                                has_resources_boolean = True
-                                break
-
-                        if has_resources_boolean:
-                            found_food, found_ammo, found_basic_tech, found_advanced_tech, found_fuel_total, found_credits_total = cur_grid_to_use[cur_char.cur_grid_y][cur_char.cur_grid_x].collect_scavenge_from_room(cur_char)
-                            food_total += found_food
-                            ammo_total += found_ammo
-                            basic_tech_total += found_basic_tech
-                            advanced_tech_total += found_advanced_tech
-                            fuel_total += found_fuel_total
-                            credits_total += found_credits_total
+            #region Check cardinal directions:
+            elif (input_str == "W" or input_str == "WEST" or input_str == "N" or input_str == "NORTH" or
+            input_str == "E" or input_str == "EAST" or input_str == "S" or input_str == "SOUTH"):
+                parsed_str = input_str
+                if input_str == "W":
+                    parsed_str = "WEST"
+                elif input_str == "E":
+                    parsed_str = "EAST"
+                elif input_str == "S":
+                    parsed_str = "SOUTH"
+                elif input_str == "N":
+                    parsed_str = "NORTH"
+                if parsed_str in cur_room_inst_id.directional_dict:
+                    if (cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_UNLOCKED or
+                    cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_DESTROYED):
+                        if cur_char.cur_action_points > 0:
+                            move_dir_x = 0
+                            move_dir_y = 0
+                            if parsed_str == "WEST":
+                                move_dir_x = -1
+                            elif parsed_str == "EAST":
+                                move_dir_x = 1
+                            elif parsed_str == "SOUTH":
+                                move_dir_y = 1
+                            elif parsed_str == "NORTH":
+                                move_dir_y = -1
+                            #Change char grid vars:
+                            cur_char.cur_grid_x += move_dir_x
+                            cur_char.cur_grid_y += move_dir_y
+                            print_room_recap = True
+                            cur_char.cur_action_points -= 1
+                            print(f"{cur_char.name} moves {parsed_str}. They now have {cur_char.cur_action_points} action points.")
                         else:
-                            print("This room has already been picked clean.\n")
-                    else:
-                        print("There is nothing of value to be found in this room.")
-                    #endregion
-                elif input_str == "INV" or input_str == "INVENTORY":
-                    cur_game_state = GAME_STATE_ACCESS_INV
+                            print("You need at least one action point to move to a different room.")
+                    elif cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_LOCKED:
+                        print(f"The {parsed_str}ERN door is locked.")
+                    elif cur_room_inst_id.directional_dict[parsed_str] == ENUM_DOOR_JAMMED:
+                        print(f"The {parsed_str}ERN door has been thoroughly jammed.")
                 else:
-                    print("Invalid command, try again.")
+                    print("There is a wall in that direction.")
+
+            #endregion
+
+            #region End Turn Logic:
+
+            elif input_str == "END" or input_str == "END TURN":
+                #Check for available action points and give a warning if characters still have unused action points:
+
+                #Replenish all characters action points, reset 'new turn' type vars:
+                for i in range(0,len(pc_char_list)):
+                    pc_char_list[i].cur_action_points = pc_char_list[i].max_action_points
+                    pc_char_list[i].participated_in_new_turn_battle = False
+                print("You've ended your turn, some time has passed.")
+
+                #Execute crisis events, if applicable:
+
+                #Grow hazards:
+
+                #Implement enemy movement ai--moving around the map, including smashing locked or jammed doors,
+                #and/or indicating to the player that they are in the process of smashing a door:
+
+            #endregion
+
+            #Print party list:
+            elif input_str == "P" or input_str == "PARTY":
+                for i in range(0,len(pc_char_list)):
+                    print(f"{i}.) {pc_char_list[i].name}")
+                print("")
+
+            #Debug placeholder: exit game:
+            elif input_str == "EXIT":
+                print("You have decided to quit the game.")
+                game_end = True
+
+            #region Ambush logic:
+            elif input_str == "AMBUSH":
+                print("Ambush is not yet implemented.")
+            #endregion
+
+            #region Hide logic:
+            elif input_str == "HIDE":
+                print("Hide is not yet implemented.")
+            #endregion
+
+            #Reprint room and everything else:
+            elif input_str == "L" or input_str == "LOOK":
+                print_room_recap = True
+                print("You take another look around and assess your situation:")
+                print("")
+            #Print char stats:
+            elif input_str == "STAT" or input_str == "STATS":
+                cur_char.print_char_stats()
+
+            #region Scavenge logic:
+
+            elif input_str == "SCAVENGE":
+                #region Scavenge logic:
+                room_scavenge_list = cur_grid_to_use[cur_char.cur_grid_y][cur_char.cur_grid_x].scavenge_resource_list
+                if isinstance(room_scavenge_list, list) and len(room_scavenge_list) > 0:
+                    has_resources_boolean = False
+                    for i in range(0,len(room_scavenge_list)):
+                        if room_scavenge_list[i] != -1:
+                            has_resources_boolean = True
+                            break
+
+                    if has_resources_boolean:
+                        found_food, found_ammo, found_basic_tech, found_advanced_tech, found_fuel_total, found_credits_total = cur_grid_to_use[cur_char.cur_grid_y][cur_char.cur_grid_x].collect_scavenge_from_room(cur_char)
+                        food_total += found_food
+                        ammo_total += found_ammo
+                        basic_tech_total += found_basic_tech
+                        advanced_tech_total += found_advanced_tech
+                        fuel_total += found_fuel_total
+                        credits_total += found_credits_total
+                    else:
+                        print("This room has already been picked clean.\n")
+                else:
+                    print("There is nothing of value to be found in this room.")
+
+            #endregion
+
+            #Change game state to access inv:
+            elif input_str == "INV" or input_str == "INVENTORY":
+                cur_game_state = GAME_STATE_ACCESS_INV
+
             else:
                 print("Invalid command, try again.")
 
@@ -596,10 +866,13 @@ if __name__ == '__main__':
                         else:
                             if selected_item.equippable_boolean == True:
                                 #Determine if we need to unequip, equip, swap, or use item:
-                                if item_index <= ENUM_EQUIP_SLOT_HANDS:
+                                if item_index <= ENUM_EQUIP_SLOT_LH:
                                     #Unequip item, if it's already equipped as one of the equipment slots:
-                                    cur_char.unequip_item(selected_item)
-                                elif item_index > ENUM_EQUIP_SLOT_HANDS:
+                                    cur_char.unequip_item(selected_item,item_index)
+                                elif item_index > ENUM_EQUIP_SLOT_LH:
+                                    if cur_char.check_valid_item_equip(selected_item):
+                                        cur_char.equip_item(selected_item,item_index)
+                                    """ Previous code
                                     #Store the index of where the item is supposed to be equipped on the char's equip slots:
                                     selected_item_equip_slot = selected_item.equip_slot_enum
                                     #If that position where this item is supposed to go is already occupied by another item, then swap the positions of the two:
@@ -612,6 +885,7 @@ if __name__ == '__main__':
                                     elif cur_char.inv_list[selected_item_equip_slot] == -1:
                                         #Equip item to an empty slot:
                                         cur_char.equip_item(selected_item,item_index)
+                                    """
                             else:
                                 print(f"The {selected_item.item_name} is not an equippable item.")
                     else:
@@ -625,7 +899,6 @@ if __name__ == '__main__':
         #endregion
 
         #region Passing item game state
-
         elif cur_game_state == GAME_STATE_PASSING_ITEM:
             print("\nPass item to which character in the same room?\n")
             chars_in_room_list = cur_room_inst_id.pcs_in_room_list

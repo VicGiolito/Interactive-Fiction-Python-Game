@@ -247,7 +247,7 @@ class Room:
                 team_str = "enemy"
                 if char_team_enum == ENUM_CHAR_TEAM_NEUTRAL:
                     team_str = "neutral"
-                # Count occurrences by name using Counter obj from importants
+                # Count occurrences by name using Counter obj from imports
                 name_counts = Counter(char.name for char in ar_to_use)
                 # Print results
                 print(f"There are the following {team_str} characters in this room:")
