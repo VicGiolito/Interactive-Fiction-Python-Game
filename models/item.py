@@ -67,6 +67,7 @@ class Item:
             self.item_verb = "pumps the"
             self.item_dmg_str = "shot"
             self.aoe_count = 3
+            self.can_overwatch_boolean = True
         elif self.item_enum == ENUM_ITEM_REVOLVER:
             self.dmg_min = 1
             self.dmg_max = 4
@@ -75,6 +76,7 @@ class Item:
             self.equip_slot_list = [ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH] #Indicates either hand can equip
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
+            self.can_overwatch_boolean = True
         elif self.item_enum == ENUM_ITEM_LASER_PISTOL:
             self.dmg_min = 1
             self.dmg_max = 3
@@ -84,6 +86,7 @@ class Item:
             self.max_range = 3
             self.item_verb = "fires the"
             self.item_dmg_str = "burned"
+            self.can_overwatch_boolean = True
         elif self.item_enum == ENUM_ITEM_GRENADES:
             self.dmg_min = 4
             self.dmg_max = 8
@@ -112,6 +115,7 @@ class Item:
             self.item_verb = "fires the"
             self.item_dmg_str = "exploded"
             self.aoe_count = -1
+            self.can_overwatch_boolean = True
         elif self.item_enum == ENUM_ITEM_LEAD_PIPE:
             self.dmg_min = 1
             self.dmg_max = 4
@@ -210,7 +214,7 @@ class Item:
             self.item_name = "SHOOTING SPINE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 3
-            self.item_verb = "fires with a"
+            self.item_verb = "fires a"
             self.item_dmg_str = "shot"
             self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
@@ -220,7 +224,7 @@ class Item:
             self.item_name = "VENOMOUS SPINE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 3
-            self.item_verb = "fires with a"
+            self.item_verb = "fires a"
             self.item_dmg_str = "shot"
             self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
@@ -274,6 +278,7 @@ class Item:
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
             self.can_suppress_boolean = True
+            self.can_overwatch_boolean = True
             self.aoe_count = 3
         elif self.item_enum == ENUM_ITEM_SNIPER_RIFLE:
             self.dmg_min = 10
@@ -282,7 +287,7 @@ class Item:
             self.melee_debuff_boolean = True
             self.item_name = "SNIPER RIFLE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
-            self.max_range = 4
+            self.max_range = 5
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
             self.can_overwatch_boolean = True
@@ -291,12 +296,14 @@ class Item:
             self.dmg_max = 10
             self.requires_ammo_boolean = False
             self.melee_debuff_boolean = True
-            self.item_name = "LASER RIFLE"
+            self.item_name = "PULSE RIFLE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 4
             self.item_verb = "fires the"
             self.item_dmg_str = "burned"
             self.can_overwatch_boolean = True
+            self.can_suppress_boolean = True
+            self.aoe_count = 2
         elif self.item_enum == ENUM_ITEM_MEDKIT:
             self.single_use_boolean = True
             self.usable_boolean = True

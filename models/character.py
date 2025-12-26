@@ -83,6 +83,9 @@ class Character:
         self.dodge_bonus_boolean = False
 
         self.randomly_chosen_move_dir = random.choice([-1,1])
+        self.overwatch_rank = -1
+        self.will_overwatch_boolean = False
+        self.will_overwatch_boolean = False
 
         #region Define char stats....
         if char_type_enum == ENUM_CHARACTER_OGRE:
@@ -117,7 +120,7 @@ class Character:
             # Starting equipment:
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             self.equip_item(item_to_equip, -1, True)
-            item_to_equip = Item(ENUM_ITEM_POLICE_TRUNCHEON)
+            item_to_equip = Item(ENUM_ITEM_SNIPER_RIFLE)
             self.equip_item(item_to_equip, -1, True)
             item_to_equip = Item(ENUM_ITEM_MACHINE_PISTOL)
             self.add_item_to_backpack(item_to_equip, True)
@@ -277,6 +280,8 @@ class Character:
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_SNIPER_RIFLE)
+            self.equip_item(item_to_equip, -1, True)
             item_to_equip = Item(ENUM_ITEM_LASER_PISTOL)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_REVOLVER)
@@ -286,7 +291,7 @@ class Character:
             item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_FLAME_THROWER)
-            self.equip_item(item_to_equip, -1,True)
+            self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_SOLDIER:
             self.name = "Cooper, 'The Security Guard'"
@@ -312,16 +317,18 @@ class Character:
             self.starting_combat_rank = ENUM_RANK_PC_FAR  # debug only
 
             # Starting equipment
-            item_to_equip = Item(ENUM_ITEM_FLAK_ARMOR)
-            self.equip_item(item_to_equip, -1,True)
-            item_to_equip = Item(ENUM_ITEM_MACHINE_PISTOL)
-            self.equip_item(item_to_equip, -1,True)
-            item_to_equip = Item(ENUM_ITEM_FIRE_AXE)
-            self.equip_item(item_to_equip, -1, True)
-            item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
-            self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_TARGETING_HUD)
             self.equip_item(item_to_equip, -1, True)
+            item_to_equip = Item(ENUM_ITEM_FLAK_ARMOR)
+            self.equip_item(item_to_equip, -1,True)
+            item_to_equip = Item(ENUM_ITEM_LASER_RIFLE)
+            self.equip_item(item_to_equip, -1, True)
+            item_to_equip = Item(ENUM_ITEM_MACHINE_PISTOL)
+            self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_FIRE_AXE)
+            self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
+            self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_REVOLVER)
             self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_STUN_BATON)
@@ -332,13 +339,7 @@ class Character:
             self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_POLICE_TRUNCHEON)
             self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_RIOT_SHIELD)
-            self.equip_item(item_to_equip, -1,True)
-            self.add_item_to_backpack(item_to_equip, True)
-            self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_GRENADES)
-            self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_LASER_RIFLE)
             self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_SCIENTIST:

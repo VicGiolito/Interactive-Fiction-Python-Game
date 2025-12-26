@@ -20,6 +20,50 @@ from models.room import Room
 
 #region Define help funcs and essential funcs
 
+def build_overwatch_list(moving_char_id,combat_initiative_list):
+    overwatch_attacker_list = []
+    moving_char_team = moving_char_id.char_team_enum
+
+    #Iterate through combat_init_list, adding Chars to the overwatch_attacker_list if they're of the
+    #opposing team, and their self.overwatch_rank == moving_char_id.current_rank
+    for i in range(0,len(combat_initiative_list)):
+
+        char_id = combat_initiative_list[i]
+
+        if moving_char_team == ENUM_CHAR_TEAM_ENEMY:
+
+            if char_id.char_team_enum == ENUM_CHAR_TEAM_PC or char_id.char_team_enum == ENUM_CHAR_TEAM_NEUTRAL:
+
+                if char_id.overwatch_rank == moving_char_id.cur_combat_rank and char_id.will_overwatch_boolean:
+
+                    overwatch_attacker_list.append(char_id)
+
+        elif moving_char_team == ENUM_CHAR_TEAM_PC or moving_char_team == ENUM_CHAR_TEAM_NEUTRAL:
+
+            if (char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY and
+            char_id.overwatch_rank == moving_char_id.cur_combat_rank and char_id.will_overwatch_boolean):
+
+                overwatch_attacker_list.append(char_id)
+
+    return overwatch_attacker_list
+
+#if check_overwatch_or_suppress_boolean == true: we check for overwatch; if false: we check for suppress.
+#returns true if the specified wep ability is available; returns false otherwise
+def return_overwatch_or_suppress_capable(char_id,check_overwatch_or_suppress_boolean):
+    for i in range(ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH+1):
+        if isinstance(char_id.inv_list[i], Item):
+            item_id = char_id.inv_list[i]
+            if check_overwatch_or_suppress_boolean:
+                if item_id.can_overwatch_boolean:
+                    #print(f"Debug: return_overwatch_or_suppress_capable: check_overwatch_or_suppress_boolean == {check_overwatch_or_suppress_boolean}, returning TRUE")
+                    return True
+            elif not check_overwatch_or_suppress_boolean:
+                if item_id.can_suppress_boolean:
+                    #print(f"Debug: return_overwatch_or_suppress_capable: check_overwatch_or_suppress_boolean == {check_overwatch_or_suppress_boolean}, returning TRUE")
+                    return True
+    #print(f"Debug: return_overwatch_or_suppress_capable: check_overwatch_or_suppress_boolean == {check_overwatch_or_suppress_boolean}, returning FALSE")
+    return False
+
 def advance_or_withdraw_char(move_dir,combat_rank_list,cur_combat_char):
     # Add to next rank in combat_rank_list
     combat_rank_list[cur_combat_char.cur_combat_rank + move_dir].append(cur_combat_char)
@@ -44,6 +88,7 @@ def advance_or_withdraw_char(move_dir,combat_rank_list,cur_combat_char):
     return combat_rank_list
 
     #Simply returns true if either the ENUM_EQUIP_SLOT_RH or ENUM_EQUIP_SLOT_LH are found in equip_slot_list
+
 def check_equip_slot_list_for_rh_or_lh(equip_slot_list):
     for i in range(0,len(equip_slot_list)):
         if isinstance(equip_slot_list[i],list):
@@ -104,33 +149,45 @@ def destroy_combatant_inst(combat_rank_list, combat_initiative_list, filtered_en
     return combat_rank_list, combat_initiative_list, filtered_enemy_list, pc_char_list, enemy_char_list,neutral_char_list
 
 def advance_combat_cur_char(cur_combat_char,combat_initiative_list,cur_combat_room_id,cur_combat_round, prev_index_for_cur_combat_char):
+    #Deliberately throw error is cur_combat_char is not even an instance of the char class:
+    if isinstance(cur_combat_char,Character) == False:
+        print(f"advance_combat_cur_char: ERROR: cur_combat_char did not even == an instance of Character. It == {cur_combat_char}. Throw error: {cur_combat_char.non_existant_attribute}")
+
     # Advance cur_combat_char global var:
     try:
         cur_index = combat_initiative_list.index(cur_combat_char)
     #If they died during the course of their turn (such as while withdrawing or advancing under overwatch),
-    #then just use their previous index from when before they died.
+    #then just use their previous index from when before they died as a reference:
     except ValueError:
-        cur_index = prev_index_for_cur_combat_char
+        print(f"Debug: advance_combat_cur_char: cur_index for the {cur_combat_char.name} could not be found, which means they were killed and deleted from the combat_init_list; therefore we're using the prev_index_for_cur_combat_char: {prev_index_for_cur_combat_char} as reference instead. We'll attempt to adjust it by - 1 and use it, or 0.")
+        #They were deleted from the list, so we need to adjust the cur_index appropriately:
+        if prev_index_for_cur_combat_char - 1 >= 0:
+            cur_index = prev_index_for_cur_combat_char-1
+        else:
+            cur_index = 0
+        print(f"Debug: advance_combat_cur_char: cur_index now == {cur_index}. We had to adjust it b.c the {cur_combat_char.name} couldn't be found in the combat_init_list.")
 
     # check to see if we need to fill and reorganize the combat_initiative_list:
     if cur_index + 1 >= len(combat_initiative_list):
-        combat_initiative_list = -1
-        combat_initiative_list = []
         # Setup combat init list
         combat_initiative_list = fill_combat_initiative_list(cur_combat_room_id)
         # Organize it by speed:
         combat_initiative_list = organize_initiative_list(combat_initiative_list)
         # Assign global cur_combat_char as the first index position:
         cur_combat_char = combat_initiative_list[0]
-        #Reset their dodge_bonus_boolean
-        cur_combat_char.dodge_bonus_boolean = False
+        #Increment round
         cur_combat_round += 1
+        #Print round change:
         print(f"... Round {cur_combat_round} begins... \n")
     else:
         # Assign cur_combat_char as the next char in our initiative_list
         cur_combat_char = combat_initiative_list[cur_index + 1]
-        # Reset their dodge_bonus_boolean
-        cur_combat_char.dodge_bonus_boolean = False
+
+    #Now that the cur_combat_char has been defined, reset various 1-turn-only vars for them:
+    # Reset their dodge_bonus_boolean
+    cur_combat_char.dodge_bonus_boolean = False
+    cur_combat_char.will_suppress_boolean = False
+    cur_combat_char.will_overwatch_boolean = False
 
     # Move to assign commands or execute ai
     if cur_combat_char.char_team_enum == ENUM_CHAR_TEAM_PC:
