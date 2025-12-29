@@ -54,7 +54,7 @@ def apply_status_effects(char_id,item_id):
                         char_id.bleeding_count += 1 #Bleeding can stack
                     elif i == ENUM_STATUS_EFFECT_STUN:
                         #Already stunned characters can't get re-stunned:
-                        if char_id.stun_count <= 0:
+                        if char_id.stun_count <= 0 and char_id.stun_immune_boolean == False:
                             status_effect_str = "STUNNED"
                             char_id.stun_count = 2 #Stun can't stack
                             #Also reset some of their stats:
@@ -71,7 +71,7 @@ def apply_status_effects(char_id,item_id):
                         status_effect_str = "BURNING"
                         char_id.burning_count = 2 #Can't stack
                     elif i == ENUM_STATUS_EFFECT_SUPPRESSED:
-                        if item_id.suppressive_fire_mode_enabled:
+                        if item_id.suppressive_fire_mode_enabled and char_id.suppress_immune_boolean == False:
                             status_effect_str = "SUPPRESSED (can't move, -2 evasion, -2 speed)"
                             char_id.suppressed_count = 2  # Can't stack.
                         else:
