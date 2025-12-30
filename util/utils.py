@@ -20,6 +20,77 @@ from models.room import Room
 
 #region Define help funcs and essential funcs
 
+def return_target_max_min_weapon_range(combat_rank_list,find_from_rank_int,acting_char_id):
+
+    #Define iterate range:
+    if find_from_rank_int != -1:
+        starting_rank = find_from_rank_int
+        ending_rank = find_from_rank_int+1
+    else:
+        starting_rank = 0
+        ending_rank = len(combat_rank_list)
+
+    weapon_range_list = []
+
+    for i in range(starting_rank,ending_rank):
+        if isinstance(combat_rank_list[i],list):
+            for nested_i in range(0,len(combat_rank_list[i])):
+
+                char_id = combat_rank_list[i][nested_i]
+
+                #As this script will onyl be used by AI (enemy or neutral) -
+                # We only want to check and add item ranges from the opposite team:
+                if acting_char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY and char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+                    continue
+                if (acting_char_id.char_team_enum == ENUM_CHAR_TEAM_NEUTRAL and
+                (char_id.char_team_enum == ENUM_CHAR_TEAM_NEUTRAL or char_id.char_team_enum == ENUM_CHAR_TEAM_PC)):
+                    continue
+
+                #Alright, we've forbidden the opposite team; now change to checking either inv_list (if we're an enemy checking a pc),
+                #or ability list if we're an enemy checking a neutral or a neutral checking an enemy (any other case):
+                if acting_char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY and char_id.char_team_enum == ENUM_CHAR_TEAM_PC:
+                    item_list_to_check = char_id.inv_list
+                else:
+                    item_list_to_check = char_id.ability_list
+
+                if isinstance(item_list_to_check,list):
+                    for inv_i in range(0,len(item_list_to_check)):
+                        if isinstance(item_list_to_check[inv_i],Item):
+                            weapon_range_list.append(item_list_to_check[inv_i].max_range)
+
+    random.shuffle(weapon_range_list)
+    weapon_range_list.sort()
+    max_range = weapon_range_list[len(weapon_range_list)-1]
+    min_range = weapon_range_list[0]
+
+    return max_range, min_range
+
+#Used in combat for enemy and neutral AI; simply adds char_ids of the opposing team to the combat_initiative_list,
+#and defines their dist_to_enemy attribute by using return_distance_between_ranks(); afterwards, we'll sort the
+#nearest_target_list by this attribute to find our nearest target or most distant target rank:
+def build_nearest_target_list(combat_initiative_list,origin_char_id):
+
+    nearest_target_list = []
+
+    # Iterate through combat_initiative_list, add pc or neutral (or enemy, if this is a neutral char);
+    # Calc dist between each once and self; add:
+    for i in range(0, len(combat_initiative_list)):
+
+        char_id = combat_initiative_list[i]
+
+        if origin_char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+            if char_id.char_team_enum == ENUM_CHAR_TEAM_NEUTRAL or char_id.char_team_enum == ENUM_CHAR_TEAM_PC:
+                if char_id.unconscious_boolean == False:
+                    char_id.dist_to_enemy = return_distance_between_ranks(char_id.cur_combat_rank, origin_char_id.cur_combat_rank)
+                    nearest_target_list.append(char_id)
+
+        elif origin_char_id.char_team_enum == ENUM_CHAR_TEAM_NEUTRAL:
+            if char_id.char_team_enum == ENUM_CHAR_TEAM_ENEMY:
+                char_id.dist_to_enemy = return_distance_between_ranks(char_id.cur_combat_rank, origin_char_id.cur_combat_rank)
+                nearest_target_list.append(char_id)
+
+    return nearest_target_list
+
 def print_combat_initiative_list(combat_initiative_list,cur_char):
     print("This is the order of the combat initiative queue:")
     for i in range(0,len(combat_initiative_list)):
@@ -184,7 +255,7 @@ def resolve_dot_effects(char_id):
         if char_id.healing_factor_cd <= 0:
             if char_id.hp_cur < char_id.hp_max:
                 char_id.hp_cur += 1
-                print(f"... {char_id.name} has passively healed 1 hit point, due to their HEALING FACTOR.\n")
+                print(f"**... {char_id.name} has passively healed 1 hit point, due to their HEALING FACTOR.**\n")
             #Reset cd:
             char_id.healing_factor_cd = 2
         #Reduce cd

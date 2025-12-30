@@ -9,9 +9,11 @@ import textwrap
 class Character:
 
     # region Constructor event for character stats:
-    def __init__(self, char_type_enum, spawn_grid_x, spawn_grid_y, spawn_grid, char_team_enum,add_to_room_list_boolean):
+    def __init__(self, char_type_enum, spawn_grid_x, spawn_grid_y, spawn_grid, char_team_enum,add_to_room_list_boolean,wep_loadout_int = 0):
 
         self.add_to_room_list_boolean = add_to_room_list_boolean
+
+        self.wep_loadout_int = wep_loadout_int #Only a debug var used for certain enemies to change their wep loadout, for debug purposes
 
         # Default values for instance vars for this particularly character:
         self.strength = 0
@@ -107,6 +109,7 @@ class Character:
         self.healing_nanites_count = 0
         self.suppressed_count = 0
         self.stun_count = 0
+        self.spawn_minion_count = 0
 
         self.resolve_dot_effects_boolean = True
         self.healing_passive_boolean = False
@@ -144,7 +147,7 @@ class Character:
             self.armor = 1
             self.healing_factor_boolean = True
             self.revived_dialogue_str_list = [
-                f"*{self.name} dusts himself off, and grumbles: 'How do you kill a dead man?'*",
+                f"*{self.name} dusts himself off, grumbling: 'How do you kill a dead man?'*",
                 f"*'Shit,' {self.name} mumbles. 'Must've died again.'",
                 f"{self.name} clambers to his feet, spitting a gob of blood from his mouth. It's congealed before it hits the ground. 'Now you've really pissed me off.'",
                 f"'I've still got a few debts left to pay,' {self.name} grumbles. He grins maliciously, cracking his knuckles. 'And a few skulls left to split...'"
@@ -152,16 +155,16 @@ class Character:
 
             self.starting_combat_rank = ENUM_RANK_PC_FAR #debug only
 
-            self.accuracy = ENUM_AVERAGE_ACCURACY_SCORE-2 #Worse than average accuracy, only hits about 50% of the time, on average
-            self.evasion = ENUM_AVERAGE_EVASION_SCORE-2 #Worse than average evasion
+            self.accuracy = ENUM_AVERAGE_ACCURACY_SCORE-1 #Worse than average accuracy, only hits about 50% of the time, on average
+            self.evasion = ENUM_AVERAGE_EVASION_SCORE-1 #Worse than average evasion
 
             # Starting equipment:
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             self.equip_item(item_to_equip, -1, True)
             item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
             self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
-            self.equip_item(item_to_equip, -1, True)
+            #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
+            #self.equip_item(item_to_equip, -1, True)
             item_to_equip = Item(ENUM_ITEM_MACHINE_PISTOL)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_SHOTGUN)
@@ -320,10 +323,10 @@ class Character:
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
-            self.equip_item(item_to_equip, -1,True)
-            item_to_equip = Item(ENUM_ITEM_TOXIC_GRENADE_LAUNCHER)
-            self.add_item_to_backpack(item_to_equip, True)
+            #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
+            #self.equip_item(item_to_equip, -1,True)
+            #item_to_equip = Item(ENUM_ITEM_TOXIC_GRENADE_LAUNCHER)
+            #self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_LASER_PISTOL)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_REVOLVER)
@@ -387,8 +390,8 @@ class Character:
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_SECURITY_VEST)
             self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
-            self.add_item_to_backpack(item_to_equip, True)
+            #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
+            #self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_SCIENTIST:
             self.name = "Darius, 'The Physicist'"
@@ -548,8 +551,8 @@ class Character:
 
         elif char_type_enum == ENUM_CHARACTER_NEUTRAL_INFECTED_SCIENTIST:
             self.name = "Gregos, 'The Researcher'"
-            self.hp_max = 5
-            self.hp_cur = 2
+            self.hp_max = 8
+            self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
             self.sanity_cur = 2
@@ -567,16 +570,16 @@ class Character:
             self.dexterity = 2
             self.speed = 2
 
-            starting_combat_rank = ENUM_RANK_PC_NEAR
+            self.starting_combat_rank = ENUM_RANK_PC_FAR
+            self.combat_ai_preference = ENUM_AI_COMBAT_RANGED_COWARD
 
             # Starting equipment
-            item_to_equip = Item(ENUM_ITEM_SCIENTIST_LABCOAT)
-            self.equip_item(item_to_equip, -1,True)
+            self.add_ability(ENUM_ITEM_REVOLVER)
 
         elif char_type_enum == ENUM_CHARACTER_ENEMY_SKITTERING_LARVA:
             self.name = "Skittering Larva"
-            self.hp_max = 3
-            self.hp_cur = 3
+            self.hp_max = random.randint(3,4)
+            self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
             self.sanity_cur = 20
@@ -592,15 +595,107 @@ class Character:
             self.res_gas = 100
             self.res_electric = 0
             #debug:
-            self.starting_combat_rank = ENUM_RANK_ENEMY_NEAR
+            self.starting_combat_rank = ENUM_RANK_ENEMY_FAR
             #abilities
             self.add_ability(ENUM_ITEM_LARVA_INJECTION_BARB)
             self.add_ability(ENUM_ITEM_LARVA_WRITHING_TENDRIL)
 
+        elif char_type_enum == ENUM_CHARACTER_NEUTRAL_JITTERING_BUZZSAW:
+            self.name = "Jittering Buzzsaw Droid"
+            self.hp_max = random.randint(3,5)
+            self.hp_cur = self.hp_max
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+            self.speed = 4
+
+            self.combat_ai_preference = ENUM_AI_COMBAT_MELEE
+
+            self.armor = 0
+            self.evasion = 1
+            self.res_fire = 50
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = -100
+            #debug:
+            self.starting_combat_rank = ENUM_RANK_PC_FAR
+            #abilities
+            self.add_ability(ENUM_ITEM_CRUDE_BUZZSAW)
+
+        elif char_type_enum == ENUM_CHARACTER_NEUTRAL_FUMIGATING_FLAMER:
+            self.name = "Fumigating Flamer Droid"
+            self.hp_max = random.randint(6,8)
+            self.hp_cur = self.hp_max
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+            self.speed = 1
+
+            self.combat_ai_preference = ENUM_AI_COMBAT_MELEE
+
+            self.armor = 0
+            self.evasion = 0
+            self.res_fire = 50
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = -100
+            #debug:
+            self.starting_combat_rank = ENUM_RANK_PC_FAR
+            #abilities
+            self.add_ability(ENUM_ITEM_FLAME_THROWER)
+
+        elif char_type_enum == ENUM_CHARACTER_NEUTRAL_SPINNING_SCATTERSHOT:
+            self.name = "Spinning Scattershot Droid"
+            self.hp_max = random.randint(5,7)
+            self.hp_cur = self.hp_max
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+            self.speed = 4
+
+            self.combat_ai_preference = ENUM_AI_COMBAT_RANGED_COWARD
+
+            self.armor = 0
+            self.evasion = 1
+            self.res_fire = 50
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = -100
+            #debug:
+            self.starting_combat_rank = ENUM_RANK_PC_FAR
+            #abilities
+            self.add_ability(ENUM_ITEM_SHOTGUN)
+
+        elif char_type_enum == ENUM_CHARACTER_NEUTRAL_WHIPSTICH_SENTINEL:
+            self.name = "Whipstich Sentinel Droid"
+            self.hp_max = random.randint(7,9)
+            self.hp_cur = self.hp_max
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+            self.speed = 4
+
+            self.combat_ai_preference = ENUM_AI_COMBAT_OVERWATCH
+
+            self.armor = 0
+            self.evasion = 1
+            self.res_fire = 50
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = -100
+            #debug:
+            self.starting_combat_rank = ENUM_RANK_PC_FAR
+            #abilities
+            self.add_ability(ENUM_ITEM_LASER_PISTOL)
+
         elif char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER:
             self.name = "Lumbering Mauler"
-            self.hp_max = 18
-            self.hp_cur = 18
+            self.hp_max = random.randint(14,18)
+            self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
             self.sanity_cur = 20
@@ -615,6 +710,8 @@ class Character:
 
             self.suppress_immune_boolean = True
             self.stun_immune_boolean = True
+            self.can_spawn_minions = True
+            self.spawn_minion_count = random.randint(1,3)
 
             self.combat_ai_preference = ENUM_AI_COMBAT_MELEE
 
@@ -626,8 +723,8 @@ class Character:
 
         elif char_type_enum == ENUM_CHARACTER_ENEMY_SPINED_SPITTER:
             self.name = "Spined Spitter"
-            self.hp_max = 10
-            self.hp_cur = 10
+            self.hp_max = random.randint(9,11)
+            self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
             self.sanity_cur = 20
@@ -650,10 +747,50 @@ class Character:
             #self.add_ability(ENUM_ITEM_SPINE_PROJECTILE_VENOMOUS)
             #self.add_ability(ENUM_ITEM_SPINE_PROJECTILE_INFECTED)
 
+        elif char_type_enum == ENUM_CHARACTER_ENEMY_TRANSMOGRIFIED_SOLDIER:
+            self.name = "Transmogrified Soldier"
+            self.hp_max = random.randint(9,12)
+            self.hp_cur = self.hp_max
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+
+            self.armor = 0
+            self.evasion = 0
+            self.res_fire = 0
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = 0
+
+            self.combat_ai_preference = ENUM_AI_COMBAT_OVERWATCH
+
+            self.speed = 2
+
+            # abilities
+            self.add_ability(ENUM_ITEM_MONSTROUS_CLAW)
+
+            if wep_loadout_int <= 0:
+                self.add_ability(ENUM_ITEM_LASER_RIFLE)
+                self.add_ability(ENUM_ITEM_SECURITY_VEST)
+            elif wep_loadout_int == 1:
+                ran_abil_enum = random.choice([ENUM_ITEM_ASSAULT_RIFLE,ENUM_ITEM_SUB_MACHINE_GUN])
+                self.add_ability(ran_abil_enum)
+                self.add_ability(ENUM_ITEM_FLAK_ARMOR)
+            elif wep_loadout_int == 2:
+                ran_val = random.choice([1,2])
+                if ran_val == 1:
+                    ran_abil_enum = random.choice([ENUM_ITEM_SHOTGUN,ENUM_ITEM_FLAME_THROWER])
+                    self.add_ability(ran_abil_enum)
+                else:
+                    self.add_ability(ENUM_ITEM_MACHINE_PISTOL)
+                    self.add_ability(ENUM_ITEM_RIOT_SHIELD)
+                self.add_ability(ENUM_ITEM_SUIT_MARINE)
+
         elif char_type_enum == ENUM_CHARACTER_ENEMY_SODDEN_SHAMBLER:
             self.name = "Sodden Shambler"
-            self.hp_max = 7
-            self.hp_cur = 7
+            self.hp_max = random.randint(6,8)
+            self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
             self.sanity_cur = 20
@@ -676,8 +813,8 @@ class Character:
 
         elif char_type_enum == ENUM_CHARACTER_ENEMY_WEBBED_LURKER:
             self.name = "Chittering Lurker"
-            self.hp_max = 8
-            self.hp_cur = 8
+            self.hp_max = random.randint(7,9)
+            self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
             self.sanity_cur = 20
@@ -777,17 +914,25 @@ class Character:
 
     #Note: most abilities are just items at this point
     def add_ability(self,item_enum):
+
+        suppress_boolean = False
+        #These units use pc weapons but shouldn't be able to suppress all of the time, disable their supresss
+        if self.char_team_enum == ENUM_CHAR_TEAM_ENEMY or self.char_team_enum == ENUM_CHAR_TEAM_NEUTRAL:
+            suppress_boolean = True
+            if (self.char_type_enum >= ENUM_CHARACTER_ENEMY_TRANSMOGRIFIED_SOLDIER
+            and self.char_type_enum >= ENUM_CHARACTER_ENEMY_TRANSMOGRIFIED_SOLDIER):
+                suppress_boolean = False
+
         if isinstance(self.ability_list, list):
-            if self.char_team_enum == ENUM_CHAR_TEAM_PC:
-                self.ability_list.append(Item(item_enum))
-            else:
-                self.ability_list.append(Item(item_enum, True))
+            self.ability_list.append(Item(item_enum,suppress_boolean))
         else:
             self.ability_list = []
-            if self.char_team_enum == ENUM_CHAR_TEAM_PC:
-                self.ability_list.append(Item(item_enum))
-            else:
-                self.ability_list.append(Item(item_enum, True))
+            self.ability_list.append(Item(item_enum,suppress_boolean))
+
+        #If this is not a pc char (whose abilities must be activated) then automatically apply any associated stat changes:
+        if self.char_team_enum != ENUM_CHAR_TEAM_PC:
+            item_id = self.ability_list[len(self.ability_list)-1]
+            self.change_char_stats(item_id,True,True)
 
     #equip_item: item_index: indicates which BACKPACK SLOT this item should be removed from (-1 works fine when equipping starting kit); item_inst_id: indicates the item being equipped.
     def equip_item(self ,item_inst_id, item_index ,starting_equip_boolean = False):

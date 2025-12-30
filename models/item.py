@@ -94,8 +94,8 @@ class Item:
             self.bleed_chance = 25
             self.suppress_chance = 100
         elif self.item_enum == ENUM_ITEM_LASER_PISTOL:
-            self.dmg_min = 1
-            self.dmg_max = 3
+            self.dmg_min = 2
+            self.dmg_max = 5
             self.requires_ammo_boolean = False
             self.item_name = "PULSE PISTOL"
             self.equip_slot_list = [ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH] #Indicates either hand can equip
@@ -117,8 +117,8 @@ class Item:
             self.burn_chance = 25
             self.bleed_chance = 25
         elif self.item_enum == ENUM_ITEM_FLAME_THROWER:
-            self.dmg_min = 1
-            self.dmg_max = 4
+            self.dmg_min = 2
+            self.dmg_max = 5
             self.item_name = "FLAMETHROWER"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 1
@@ -126,6 +126,18 @@ class Item:
             self.item_dmg_str = "burned"
             self.aoe_count = -1
             self.burn_chance = 75
+            self.always_checks_status_effect_boolean = True
+        elif self.item_enum == ENUM_ITEM_HAND_FLAMER:
+            self.dmg_min = 1
+            self.dmg_max = 3
+            self.item_name = "TORVALD'S WRIST FLAMER"
+            self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
+            self.max_range = 1
+            self.item_verb = "spews fire with the"
+            self.item_dmg_str = "burned"
+            self.aoe_count = -1
+            self.burn_chance = 75
+            self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_ROCKET_LAUNCHER:
             self.dmg_min = 12
             self.dmg_max = 24
@@ -150,8 +162,8 @@ class Item:
             self.max_range = 0
             self.stun_chance = 50
         elif self.item_enum == ENUM_ITEM_MONSTROUS_CLAW:
-            self.dmg_min = 2
-            self.dmg_max = 5
+            self.dmg_min = 3
+            self.dmg_max = 6
             self.requires_ammo_boolean = False
             self.item_name = "MONSTROUS CLAWS"
             self.equip_slot_list = [ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH] #Indicates either hand can equip
@@ -168,7 +180,8 @@ class Item:
             self.item_verb = "whips with a"
             self.item_dmg_str = "slashed"
             self.max_range = 0
-            self.compromised_chance = 100
+            self.stun_chance = 25
+            self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_DESPERATE_CLAW:
             self.dmg_min = 1
             self.dmg_max = 3
@@ -180,8 +193,8 @@ class Item:
             self.max_range = 0
             self.bleed_chance = 25
         elif self.item_enum == ENUM_ITEM_LARVA_INJECTION_BARB:
-            self.dmg_min = 3
-            self.dmg_max = 3
+            self.dmg_min = 4
+            self.dmg_max = 4
             self.requires_ammo_boolean = False
             self.item_name = "INFECTED BARB"
             self.equip_slot_list = [ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH] #Indicates either hand can equip
@@ -209,6 +222,7 @@ class Item:
             self.item_dmg_str = "zapped"
             self.max_range = 0
             self.stun_chance = 100
+            self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_FIRE_AXE:
             self.dmg_min = 2
             self.dmg_max = 5
@@ -219,6 +233,16 @@ class Item:
             self.item_dmg_str = "mauled"
             self.max_range = 0
             self.bleed_chance = 25
+        elif self.item_enum == ENUM_ITEM_CRUDE_BUZZSAW:
+            self.dmg_min = 3
+            self.dmg_max = 6
+            self.requires_ammo_boolean = False
+            self.item_name = "CRUDE BUZZSAW"
+            self.equip_slot_list = [ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH] #Indicates either hand can equip
+            self.item_verb = "spins the"
+            self.item_dmg_str = "sliced"
+            self.max_range = 0
+            self.bleed_chance = 75
         elif self.item_enum == ENUM_ITEM_TASER: #High stun chance, extra damage to characters with weak electric_res
             self.dmg_min = 1
             self.dmg_max = 1
@@ -229,9 +253,10 @@ class Item:
             self.item_dmg_str = "zapped"
             self.max_range = 1
             self.stun_chance = 100
+            self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_ASSAULT_RIFLE:
-            self.dmg_min = 2
-            self.dmg_max = 5
+            self.dmg_min = 4
+            self.dmg_max = 8
             self.item_name = "ASSAULT RIFLE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 3
@@ -345,16 +370,16 @@ class Item:
             self.item_dmg_str = "melted"
             self.aoe_count = -1
         elif self.item_enum == ENUM_ITEM_SUB_MACHINE_GUN:
-            self.dmg_min = 3
-            self.dmg_max = 6
+            self.dmg_min = 2
+            self.dmg_max = 5
             self.item_name = "SUB MACHINE GUN"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
-            self.max_range = 2
+            self.max_range = 3
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
             self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
-            self.aoe_count = 3
+            self.aoe_count = 4
             self.bleed_chance = 25
             self.suppress_chance = 100
         elif self.item_enum == ENUM_ITEM_MACHINE_PISTOL:
@@ -371,8 +396,8 @@ class Item:
             self.bleed_chance = 25
             self.suppress_chance = 100
         elif self.item_enum == ENUM_ITEM_SNIPER_RIFLE:
-            self.dmg_min = 10
-            self.dmg_max = 15
+            self.dmg_min = 8
+            self.dmg_max = 12
             self.melee_debuff_boolean = True
             self.item_name = "SNIPER RIFLE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
@@ -384,8 +409,8 @@ class Item:
             self.bleed_chance = 50
             self.suppress_chance = 100
         elif self.item_enum == ENUM_ITEM_LASER_RIFLE:
-            self.dmg_min = 6
-            self.dmg_max = 10
+            self.dmg_min = 5
+            self.dmg_max = 9
             self.requires_ammo_boolean = False
             self.melee_debuff_boolean = True
             self.item_name = "PULSE RIFLE"
@@ -395,7 +420,6 @@ class Item:
             self.item_dmg_str = "burned"
             self.can_overwatch_boolean = True
             self.can_suppress_boolean = True
-            self.aoe_count = 2
             self.burn_chance = 50
             self.suppress_chance = 100
         elif self.item_enum == ENUM_ITEM_MEDKIT:
