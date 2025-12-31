@@ -21,10 +21,10 @@ if __name__ == '__main__':
     print_room_recap = True
     choose_weapon_boolean = False
     choose_ability_boolean = False
-    access_inv_from_combat_boolean = False
     attempting_suppress_boolean = False #only used for choose weapon logic
     attempting_overwatch_boolean = False #only used for choose weapon logic
     overwatch_loop_mode_enabled = False
+    combat_begun = False #Reset to false in game_state GAME_STATE_INITIALIZING_NEW_TURN, only switched to true when iterating through pc_list and certain combat-related conditions met.
 
     cur_char = -1
     cur_char_index = 0
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     overwatch_attacker_id = -1
     cur_overwatch_attacker_index = -1
 
-    passing_item_id = -1 #Used with GAME_STATE_PASSING_ITEM
+    passing_item_id = -1 #Used with GAME_STATE_PASSING_ITEM and GAME_STATE_USE_TARGET_ITEM; also used to hold the item_id of what item is being 'u'sed
     passing_item_index = -1 #Used with GAME_STATE_PASSING_ITEM
 
     cur_game_state = GAME_STATE_CHOOSE_CHARS
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         ammo_total += 15
 
         #Neutral scientist
-        for i in range(0,0):
+        for i in range(0,1):
             neutral_char_list.append(Character(ENUM_CHARACTER_NEUTRAL_INFECTED_SCIENTIST,origin_grid_x,origin_grid_y,location_grid_niffy,
                                                ENUM_CHAR_TEAM_NEUTRAL,True))
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Lumbering mauler
-        for i in range(0, random.randint(0, 0)): #1,3
+        for i in range(0, random.randint(2, 4)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_LUMBERING_MAULER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
@@ -124,35 +124,42 @@ if __name__ == '__main__':
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         # Flamer droid:
-        for i in range(0, random.randint(2, 4)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_FUMIGATING_FLAMER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
         # Scattershot droid:
-        for i in range(0, random.randint(2, 4)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_SPINNING_SCATTERSHOT, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
         # Whipstich sentinel droid:
-        for i in range(0, random.randint(1, 3)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_WHIPSTICH_SENTINEL, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
-        # Whipstich sentinel droid:
-        for i in range(0, random.randint(2, 4)):
+        # Jittering buzzsaw droid:
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_JITTERING_BUZZSAW, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
+        # Light sentry drone:
+        for i in range(0, random.randint(0, 0)):
+            enemy_char_list.append(
+                Character(ENUM_CHARACTER_NEUTRAL_LIGHT_SENTRY_DRONE, origin_grid_x, origin_grid_y,
+                          location_grid_niffy,
+                          ENUM_CHAR_TEAM_NEUTRAL, True))
+
         # Transmogrified Soldier - overwatch type:
         wep_loadout_num = 0
-        for i in range(0,9):
+        for i in range(0,0): #0,9
             if i != 0 and i % 3 == 0:
                 wep_loadout_num += 1
             enemy_char_list.append(
@@ -449,7 +456,6 @@ if __name__ == '__main__':
                             cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
                         cur_combat_round = 1
                         combat_begun = True
-                        access_inv_from_combat_boolean = True
 
                         print("You see the following enemies closing in on you:")
                         print_combat_ranks(combat_rank_list)
@@ -460,7 +466,7 @@ if __name__ == '__main__':
 
             #If we completely get through this for loop without a battle being initiated, always set cur_char to first
             #pc_inst in pc_char_list, then change game state:
-            if not combat_begun:
+            if combat_begun == False:
                 cur_char = pc_char_list[0]
                 prev_game_state = GAME_STATE_MAIN #We'll use this prev_game_state to return to either here or the main game state after combat is concluded
                 cur_game_state = GAME_STATE_MAIN
@@ -521,7 +527,7 @@ if __name__ == '__main__':
                         if combat_concluded_boolean:
                             if not enemies_won_boolean:
                                 prematurely_end_overwatch_mode = True
-                                access_inv_from_combat_boolean = False  # reset
+                                combat_begun = False  # reset
                                 #Reset, clear our combat lists:
                                 combat_initiative_list = -1
                                 combat_rank_list = -1
@@ -541,7 +547,6 @@ if __name__ == '__main__':
                                     game_end = True
                                 else:
                                     prematurely_end_overwatch_mode = True
-                                    access_inv_from_combat_boolean = False  # reset
                                     # Reset, clear our combat lists:
                                     combat_initiative_list = -1
                                     combat_rank_list = -1
@@ -592,13 +597,23 @@ if __name__ == '__main__':
                 print(battlefield_summary_str)
                 print_combat_ranks(combat_rank_list)
                 print("")
+                #Use vars to account for things like adrenal pen and other abilities, which boost stats in combat only - they don't permanently boost the actual stat.
+                total_char_spd = cur_combat_char.speed
+                total_char_acc = cur_combat_char.accuracy
+                total_char_arm = cur_combat_char.armor
+                total_char_evasion = cur_combat_char.evasion
+                if cur_combat_char.adrenal_pen_count > 0:
+                    total_char_spd += 2
+                    total_char_acc += 2
+                status_effects_str = return_status_effects_str(cur_combat_char)
                 char_summary_str = wrap_str(f"You are {cur_combat_char.name}. "
-                                            f"You have {cur_combat_char.hp_cur} hit points out of {cur_combat_char.hp_max}. "
-                                            f"You have {cur_combat_char.sanity_cur} sanity points out of {cur_combat_char.sanity_max},"
-                                            f" {cur_combat_char.armor} armor, "
-                                            f"{cur_combat_char.evasion} evasion, "
-                                            f"and {cur_combat_char.accuracy} accuracy. "
-                                            f"The party has {ammo_total} ammunition between them.",TOTAL_LINE_W,False)
+                                            f"You have {cur_combat_char.hp_cur}/{cur_combat_char.hp_max} hit points, "
+                                            f"{cur_combat_char.sanity_cur}/{cur_combat_char.sanity_max} sanity points, "
+                                            f"{total_char_arm} armor, "
+                                            f"{total_char_evasion} evasion, "
+                                            f"{total_char_acc} accuracy, "
+                                            f"and {total_char_spd} speed. "
+                                            f"The party has {ammo_total} ammunition between them. {status_effects_str}",TOTAL_LINE_W,False)
                 print(char_summary_str)
 
                 overwatch_str = ""
@@ -612,9 +627,13 @@ if __name__ == '__main__':
                 print(char_options_str)
                 input_str = input("Enter a combat command now.> ").upper().strip()
                 print("")
-
+                #region Choose ability:
+                if input_str == "ABIL" or input_str == "ABILITY":
+                    cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
+                    choose_ability_boolean = True
+                #endregion
                 #region FIGHT logic
-                if input_str == "F" or input_str == "FIGHT":
+                elif input_str == "F" or input_str == "FIGHT":
                     cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
                     choose_weapon_boolean = True
                 #endregion
@@ -731,10 +750,12 @@ if __name__ == '__main__':
         #region Choose attack - loads either weapon list (left hand and right hand) or ability list (all combat-usable) abilities:
 
         elif cur_game_state == GAME_STATE_COMBAT_CHOOSE_ATTACK:
-            ar_to_use = -1
+
+            ar_to_use = []
             desc_str = "undefined"
+
             if choose_weapon_boolean:
-                ar_to_use = []
+
                 desc_str = "Choose equipped weapon"
                 for i in range(ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH+1):
                     item_id = cur_combat_char.inv_list[i]
@@ -746,19 +767,21 @@ if __name__ == '__main__':
                     ar_to_use.append(Item(fists_item_enum))
 
             elif choose_ability_boolean:
-                ar_to_use = []
+
                 desc_str = "Choose combat ability"
-                for i in range(ENUM_EQUIP_SLOT_RH, ENUM_EQUIP_SLOT_LH + 1):
-                    if isinstance(cur_combat_char.ability_list, list):
+
+                if isinstance(cur_combat_char.ability_list, list):
+                    for i in range(0, len(cur_combat_char.ability_list)):
                         abil_id = cur_combat_char.ability_list[i]
-                        if isinstance(abil_id, Abil):
+                        if isinstance(abil_id, Item):
                             ar_to_use.append(abil_id)
             else:
                 print("GAME_STATE_COMBAT_CHOOSE_ATTACK: neither choose_weapon_boolean or choose_abil_boolean == true, something went wrong.")
 
             #Print the weapon or ability name, index, along with relevant info like max_range, min-max damage
             for i in range(0,len(ar_to_use)):
-                print(f"{desc_str} {i}.) {ar_to_use[i].item_name}, max_range: {ar_to_use[i].max_range}, min. damage: {ar_to_use[i].dmg_min}, max. damage: {ar_to_use[i].dmg_max}.")
+                full_item_str = wrap_str(f"{desc_str} {i}.) {ar_to_use[i].item_name}: {ar_to_use[i].ability_cost_str}: {return_item_stats_str(ar_to_use[i])}.",TOTAL_LINE_W,False)
+                print(full_item_str)
             print("")
             input_str = input("Enter the corresponding number associated with the weapon or ability, or enter 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
             print("")
@@ -951,7 +974,6 @@ if __name__ == '__main__':
                             if combat_concluded_boolean:
                                 if not enemies_won_boolean:
                                     prematurely_end_overwatch_mode = True
-                                    access_inv_from_combat_boolean = False  # reset
                                     # Reset, clear our combat lists:
                                     combat_initiative_list = -1
                                     combat_rank_list = -1
@@ -975,7 +997,6 @@ if __name__ == '__main__':
                                         game_end = True
                                     else:
                                         prematurely_end_overwatch_mode = True
-                                        access_inv_from_combat_boolean = False  # reset
                                         # Reset, clear our combat lists:
                                         combat_initiative_list = -1
                                         combat_rank_list = -1
@@ -1072,8 +1093,86 @@ if __name__ == '__main__':
                         # Shuffle ability list to ensure that items with equal max range are chosen randomly
                         random.shuffle(attacking_char.ability_list)
 
-                        #Overwatch ai:
-                        if attacking_char.combat_ai_preference == ENUM_AI_COMBAT_OVERWATCH:
+                        #region overwatch stationary ai:
+                        if attacking_char.combat_ai_preference == ENUM_AI_COMBAT_STATIONARY_OVERWATCH:
+
+                            # Define max_range weapon - this will be our 'ideal_abil_range:
+                            # Sort by max range - those with longest range will be on top of the list:
+                            attacking_char.ability_list.sort(key=attrgetter('max_range'), reverse=True)
+
+                            # Define chosen weapon as the weapon with the max range
+                            attacking_char.chosen_weapon = attacking_char.ability_list[0]
+                            ideal_abil_range = attacking_char.chosen_weapon.max_range
+
+                            # Build our nearest target rank:
+                            nearest_target_list = []
+                            nearest_target_list = build_nearest_target_list(combat_initiative_list, attacking_char)
+
+                            # It's possible this could be 0, if only unconscious pcs or neutrals remain:
+                            if len(nearest_target_list) > 0:
+
+                                # Define our nearest pc rank as our target rank:
+                                attacking_char.targeted_rank = nearest_target_list[0].cur_combat_rank
+
+                                # Calculate dist between cur_rank and the rank we've targeted:
+                                dist_between_target = return_distance_between_ranks(attacking_char.targeted_rank,
+                                                                                    attacking_char.cur_combat_rank)
+
+                                # Set overwatch if we can't currently hit them with our max range:
+                                if dist_between_target > ideal_abil_range:
+
+                                    rank_pos = return_overwatch_rank(attacking_char, combat_rank_list, ideal_abil_range)
+
+                                    # Define boolean var and the rank they are targeting for overwatch:
+                                    attacking_char.overwatch_rank = rank_pos
+                                    attacking_char.will_overwatch_boolean = True
+
+                                    # Debug:
+                                    print(
+                                        f"Debug: stationary OVERWATCH AI: for {attacking_char.name} the distance between them and their target == {dist_between_target}, which is > to their ideal_target_range of: {ideal_abil_range}--but they have the ai_has_ranged_advantage, so they have decided to set overwatch on their max range rank instead.")
+
+                                    # Print action message:
+                                    overwatch_str = wrap_str(
+                                        f"{attacking_char.name} has carefully aimed their {attacking_char.chosen_weapon.item_name} at rank position {attacking_char.overwatch_rank}, and is patiently waiting for any new enemy to move into this rank...\n",
+                                        TOTAL_LINE_W, False)
+                                    print(overwatch_str)
+                                    print("")
+
+                                elif dist_between_target <= ideal_abil_range:
+
+                                    # Targeted rank has already been set, just move to fight:
+                                    attacking_char.enemy_ai_fight_boolean = True
+                                    print(
+                                        f"Debug: stationary overwatch AI: for {attacking_char.name} the distance between them and their target == {dist_between_target}, which is less or <=>= to their ideal_target_range of: {ideal_abil_range}--AND the opposing team has the ranged advantage (there's no point withdrawing), so they have decided to attack.")
+
+                            # Unable to build nearest target list: this means all applicable targets were unconscious:
+                            elif len(nearest_target_list) <= 0:
+                                print(
+                                    f"{attacking_char.name} can't find any active enemies to target--they've all been downed already.\n")
+
+                                # Set var so the next enemy instance doesn't just instantly move to FIGHT code without
+                                # executing its AI:
+                                enemy_passed_turn_boolean = True
+
+                                input("Press enter to continue to the next character in the initiative queue.")
+                                print("")
+
+                                # Advance cur_char:
+                                prev_cur_combat_char_index = combat_initiative_list.index(attacking_char)
+
+                                cur_combat_char, cur_combat_round, cur_game_state, combat_initiative_list = advance_combat_cur_char(
+                                    cur_combat_char,
+                                    combat_initiative_list,
+                                    cur_combat_room_id,
+                                    cur_combat_round,
+                                    prev_cur_combat_char_index,
+                                    f"DEBUG: Moving away from EXECUTE_ACTION game_state: cur_char {cur_combat_char.name} for enemy or neutral AI: RANGED_PREFERENCE: nearest_target_list) <= 0, which means all applicable targets are downed and unconscious.")
+
+
+                        #endregion
+
+                        #region Overwatch ai:
+                        elif attacking_char.combat_ai_preference == ENUM_AI_COMBAT_OVERWATCH:
 
                             #Define max_range weapon - this will be our 'ideal_abil_range:
                                 # Sort by max range - those with longest range will be on top of the list:
@@ -1117,20 +1216,8 @@ if __name__ == '__main__':
 
                                 #Set overwatch if we need to advance but we could out-range them:
                                 if dist_between_target > ideal_abil_range and ai_has_ranged_advantage:
-                                    #Define move_dir as: "which direction is the target rank to my current position?"
-                                    if attacking_char.cur_combat_rank > attacking_char.targeted_rank:
-                                        move_dir = -1
-                                    elif attacking_char.cur_combat_rank < attacking_char.targeted_rank:
-                                        move_dir = 1
-                                    # elif it == this should never be the case
 
-                                    rank_pos = attacking_char.cur_combat_rank + (ideal_abil_range * move_dir)
-
-                                    #Cap:
-                                    if rank_pos < 0:
-                                        rank_pos = 0
-                                    elif rank_pos >= len(combat_rank_list):
-                                        rank_pos = len(combat_rank_list)-1
+                                    rank_pos = return_overwatch_rank(attacking_char,combat_rank_list,ideal_abil_range)
 
                                     # Define boolean var and the rank they are targeting for overwatch:
                                     attacking_char.overwatch_rank = rank_pos
@@ -1190,15 +1277,11 @@ if __name__ == '__main__':
                                 #Withdraw, if able, because we have the ranged advantage over the enemy, and could therefore use overwatch next turn.
                                 elif dist_between_target <= ideal_abil_range and ai_has_ranged_advantage == True:
 
-                                    #Regardles of whether we're north or south of the target, 'withdraw' north:
-                                    if attacking_char.cur_combat_rank > attacking_char.targeted_rank or attacking_char.cur_combat_rank < attacking_char.targeted_rank:
+                                    #Regardles of whether we're north, south, or == to the target, 'withdraw':
+                                    if attacking_char.char_team_enum == ENUM_CHAR_TEAM_ENEMY:
                                         move_dir = -1
-                                    #Move north if we're enemy, south if we're a neutral:
-                                    elif attacking_char.cur_combat_rank == attacking_char.targeted_rank:
-                                        if attacking_char.char_team_enum == ENUM_CHAR_TEAM_ENEMY:
-                                            move_dir = -1
-                                        else:
-                                            move_dir = 1
+                                    else:
+                                        move_dir = 1
 
                                     #Check to see if we can withdraw:
                                     if attacking_char.cur_combat_rank+move_dir >= 0 and attacking_char.cur_combat_rank+move_dir < len(combat_rank_list):
@@ -1259,7 +1342,7 @@ if __name__ == '__main__':
                                     prev_cur_combat_char_index,
                                     f"DEBUG: Moving away from EXECUTE_ACTION game_state: cur_char {cur_combat_char.name} for enemy or neutral AI: RANGED_PREFERENCE: nearest_target_list) <= 0, which means all applicable targets are downed and unconscious.")
 
-
+                        #endregion
 
                         # region ENEMY OR NEUTRAL PREFERS MELEE COMBAT:
                         elif attacking_char.combat_ai_preference == ENUM_AI_COMBAT_MELEE:
@@ -1327,6 +1410,20 @@ if __name__ == '__main__':
 
                                 #Melee attack them:
                                 elif dist_between_target == ideal_abil_range:
+                                    #If this is a lumbering mauler, attempt to spawn skittering larva:
+                                    if (attacking_char.char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER and
+                                    attacking_char.can_spawn_minions == True and attacking_char.spawn_minion_count > 0):
+                                        #Spawn a certain number of skittering larva:
+                                        for i in range(0,attacking_char.spawn_minion_count):
+                                            minion_inst = Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, attacking_char.cur_grid_x,attacking_char.cur_grid_y,attacking_char.cur_grid,
+                                                                    ENUM_CHAR_TEAM_ENEMY,True)
+                                            #Add to end of initiative_queue and to attacker's current rank in combat_rank_list
+                                            combat_initiative_list.append(minion_inst)
+                                            combat_rank_list[attacking_char.cur_combat_rank].append(minion_inst)
+                                            minion_inst.cur_combat_rank = attacking_char.cur_combat_rank
+                                            #Print result:
+                                            print(f"A {minion_inst.name} has just violently spawned from the {attacking_char.name}'s back!\n")
+
                                     # Targeted rank has already been set, just move to fight:
                                     attacking_char.enemy_ai_fight_boolean = True
                                     print(
@@ -1632,6 +1729,9 @@ if __name__ == '__main__':
                                         #Apply to_hit debuff if we're using suppressive fire mode:
                                         if attempting_suppress_boolean:
                                             attacker_accuracy -= ENUM_SUPPRESSIVE_FIRE_ACCURACY_DEBUFF
+                                        #Apply to_hit bonus if under the effects of adrenal pen:
+                                        if attacking_char.adrenal_pen_count > 0:
+                                            attacker_accuracy += 2
                                         #Ogre melee character gets slight to_hit bonus with melee weapons
                                         if attacking_char.char_type_enum == ENUM_CHARACTER_OGRE and attacking_char.chosen_weapon.max_range == 0:
                                             attacker_accuracy += 1
@@ -1728,7 +1828,21 @@ if __name__ == '__main__':
 
                     #endregion
 
-                    #region Resolve this phase of combat: advance cur_char, check to see if combat concluded:
+                    #region Resolve this phase of combat: destroy weapon (if single use);
+                    # advance cur_char;
+                    # check to see if combat concluded:
+                        #Destroy weapon (if single use):
+                    if isinstance(attacking_char.chosen_weapon,Item):
+                        if attacking_char.chosen_weapon.single_use_boolean:
+                            if isinstance(attacking_char.inv_list,list):
+                                if attacking_char.chosen_weapon in attacking_char.inv_list:
+                                    item_index = attacking_char.inv_list.index(attacking_char.chosen_weapon)
+                                    if item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
+                                        del attacking_char.inv_list[item_index]
+                                    else:
+                                        attacking_char.inv_list[item_index] = -1
+                            #Set attribute == -1 (remove it from memory)
+                            attacking_char.chosen_weapon = -1
 
                     #Advance cur_combat_char (and possibly cur_combat_round), but only if we're not in overwatch loop mode:
                     if not overwatch_loop_mode_enabled:
@@ -1746,7 +1860,6 @@ if __name__ == '__main__':
                     if combat_concluded_boolean:
                         if not enemies_won_boolean:
                             prematurely_end_overwatch_mode = True
-                            access_inv_from_combat_boolean = False  # reset
                             #Reset, clear our combat lists:
                             combat_initiative_list = -1
                             combat_rank_list = -1
@@ -1768,7 +1881,6 @@ if __name__ == '__main__':
                                 game_end = True
                             else:
                                 prematurely_end_overwatch_mode = True
-                                access_inv_from_combat_boolean = False  # reset
                                 # Reset, clear our combat lists:
                                 combat_initiative_list = -1
                                 combat_rank_list = -1
@@ -1893,11 +2005,14 @@ if __name__ == '__main__':
                 cur_room_inst_id.print_char_list(ENUM_CHAR_TEAM_PC)
 
                 #Print player what global resources the party is currently carrying: basic tech, advanced tech, food, fuel
-                print(f"The party is carrying between them the following shared resources: Food: {food_total}, Basic Tech.: {basic_tech_total}, Advanced Tech: {advanced_tech_total}, Ammunition: {ammo_total}, Engine Fuel: {fuel_total}.")
+                resource_str = wrap_str(f"The party is carrying between them the following shared resources: Food: {food_total}, Basic Tech.: {basic_tech_total}, Advanced Tech: {advanced_tech_total}, Ammunition: {ammo_total}, Engine Fuel: {fuel_total}.",TOTAL_LINE_W,False)
+                print(resource_str)
                 print("")
 
                 #Tell player which character they are currently inhabiting, along with their primary stats (hp, stamina, sanity):
-                print(f"You are {cur_char.name}. You have {cur_char.hp_cur} hit points, {cur_char.ability_points_cur} ability points, {cur_char.sanity_cur} sanity points, {cur_char.armor} armor, and {cur_char.evasion} evasion.")
+                status_effect_str = return_status_effects_str(cur_char)
+                char_status_str = wrap_str(f"You are {cur_char.name}. You have {cur_char.hp_cur}/{cur_char.hp_max} hit points, {cur_char.ability_points_cur}/{cur_char.ability_points_cur} ability points, {cur_char.sanity_cur}/{cur_char.sanity_cur} sanity points, {cur_char.armor} armor, and {cur_char.evasion} evasion. {status_effect_str}",TOTAL_LINE_W,False)
+                print(char_status_str)
                 print_room_recap = False #Set to false so we don't see all of this again whenever the player performs a trivial action; is reset to True whenever the player moves to a different room, or uses the 'L'ook command:
                 print("")
 
@@ -2074,7 +2189,7 @@ if __name__ == '__main__':
             #endregion
 
             #Change game state to access inv:
-            elif input_str == "INV" or input_str == "INVENTORY":
+            elif input_str == "INV" or input_str == "INVENTORY" or input_str == "I":
                 cur_game_state = GAME_STATE_ACCESS_INV
 
             else:
@@ -2086,9 +2201,9 @@ if __name__ == '__main__':
 
         elif cur_game_state == GAME_STATE_ACCESS_INV:
 
-            if not access_inv_from_combat_boolean:
+            if combat_begun == False:
                 inv_char = cur_char
-            elif access_inv_from_combat_boolean:
+            elif combat_begun:
                 inv_char = cur_combat_char
 
             inv_char.print_char_inv()
@@ -2102,7 +2217,7 @@ if __name__ == '__main__':
             item_index = -1
 
             if inv_input_str == "B" or inv_input_str == "BACK":
-                if not access_inv_from_combat_boolean:
+                if not combat_begun:
                     cur_game_state = GAME_STATE_MAIN
                     print_room_recap = True
                 else:
@@ -2124,7 +2239,10 @@ if __name__ == '__main__':
                     pass
             elif inv_input_str.startswith("G"):
 
-                chars_in_room_list = cur_room_inst_id.pcs_in_room_list
+                if combat_begun == False:
+                    chars_in_room_list = cur_room_inst_id.pcs_in_room_list
+                else:
+                    chars_in_room_list = cur_combat_room_id.pcs_in_room_list
 
                 if isinstance(chars_in_room_list, list) and len(chars_in_room_list) > 1:
                     give_item_boolean = True
@@ -2149,32 +2267,39 @@ if __name__ == '__main__':
                     if isinstance(selected_item, Item):
                         #'G' give an item to another player
                         if give_item_boolean:
-                            if not access_inv_from_combat_boolean:
+                            if item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
                                 passing_item_id = selected_item
                                 passing_item_index = item_index
                                 cur_game_state = GAME_STATE_PASSING_ITEM
                             else:
-                                print("You can't perform that action during combat.")
+                                print("You must unequip that item first.\n")
+
                         #'L'ook at item:
                         elif show_item_desc_boolean:
                             selected_item.print_item_desc()
                         #'D'rop item:
                         elif drop_item_boolean:
-                            if not access_inv_from_combat_boolean:
+                            if not combat_begun:
                                 inv_char.drop_item_into_room(selected_item,item_index, cur_grid_to_use[inv_char.cur_grid_y][inv_char.cur_grid_x])
                             else:
                                 cur_combat_char.drop_item_into_room(selected_item,item_index,cur_combat_room_id)
                         # Use item:
                         elif selected_item.usable_boolean == True:
-                            if not access_inv_from_combat_boolean:
-                                selected_item.use_item()
-                            else:
-                                print("You can't (yet) perform that action during combat.")
+                            if not combat_begun:
+                                passing_item_id = selected_item
+                                passing_item_index = item_index
+                                cur_game_state = GAME_STATE_USE_TARGET_ITEM
+                            elif combat_begun and selected_item.combat_usable_boolean == True:
+                                passing_item_id = selected_item
+                                passing_item_index = item_index
+                                cur_game_state = GAME_STATE_USE_TARGET_ITEM
+                            elif combat_begun and selected_item.combat_usable_boolean == False:
+                                print("That item can't be used in combat.\n")
                         else:
                             if selected_item.equippable_boolean == True:
                                 #Determine if we need to unequip, equip, swap, or use item:
                                 if item_index <= ENUM_EQUIP_SLOT_LH:
-                                    if not access_inv_from_combat_boolean:
+                                    if not combat_begun:
                                         #Unequip item, if it's already equipped as one of the equipment slots:
                                         inv_char.unequip_item(selected_item,item_index)
                                     else:
@@ -2185,7 +2310,7 @@ if __name__ == '__main__':
                                             print("You don't have time to unequip body or accessory slots during combat.")
                                 #Equip an item from one of the backpack slots:
                                 elif item_index > ENUM_EQUIP_SLOT_LH:
-                                    if not access_inv_from_combat_boolean:
+                                    if not combat_begun:
                                         if inv_char.check_valid_item_equip(selected_item):
                                             inv_char.equip_item(selected_item,item_index)
                                     else:
@@ -2214,16 +2339,31 @@ if __name__ == '__main__':
         #endregion
 
         #region Passing item game state
-        elif cur_game_state == GAME_STATE_PASSING_ITEM:
-            print("\nPass item to which character in the same room?\n")
-            chars_in_room_list = cur_room_inst_id.pcs_in_room_list
+        elif cur_game_state == GAME_STATE_PASSING_ITEM or cur_game_state == GAME_STATE_USE_TARGET_ITEM:
+            if cur_game_state == GAME_STATE_PASSING_ITEM:
+                print("\nPass item to which character in the same room?\n")
+            else:
+                print("\nWhich character in the same room should you use the item on?\n")
+            list_to_target = -1
+            chars_in_room_list = []
+            if combat_begun:
+                list_to_target = cur_combat_room_id.pcs_in_room_list
+                inv_char = cur_combat_char
+            else:
+                list_to_target = cur_room_inst_id.pcs_in_room_list
+                inv_char = cur_char
 
-            if isinstance(chars_in_room_list, list) and len(chars_in_room_list) > 1:
-                for i in range(len(chars_in_room_list)):
-                    if chars_in_room_list[i].name != cur_char.name:
-                        print(f"{i}.) {chars_in_room_list[i].name}")
+            if isinstance(list_to_target, list) and len(list_to_target) > 1:
+                for i in range(len(list_to_target)):
+                    if list_to_target[i] != inv_char:
+                        chars_in_room_list.append(list_to_target[i])
+
+            #Actually print our chars_in_room_list:
+            for i in range(0,len(chars_in_room_list)):
+                print(f"{i}.) {chars_in_room_list[i].name}")
+
             print("")
-            print("Choose the recipient of the item now. You can enter 'B' or 'BACKUP' at any time to return to the invetory screen: >")
+            print("Enter the character's corresponding number now. You can enter 'B' or 'BACKUP' at any time to return to the invetory screen: >")
             print("")
             input_str = input().upper().strip()
             if input_str == "B" or input_str == "BACKUP":
@@ -2235,21 +2375,46 @@ if __name__ == '__main__':
                 try:
                     int_input = int(input_str)
 
-                    if int_input > 0 and int_input < len(chars_in_room_list):
-                        if cur_char.name != chars_in_room_list[int_input].name:
-                            #Add to recipient's backpack:
-                            chars_in_room_list[int_input].add_item_to_backpack(passing_item_id)  #add_item_to_backpack(item_id_to_add ,starting_equip_boolean = False):
-                            #Remove from this char's backpack:
-                            del cur_char.inv_list[passing_item_index]
-                            #return to inventory game state:
-                            passing_item_index = -1
-                            passing_item_id = -1
-                            cur_game_state = GAME_STATE_ACCESS_INV
+                    if int_input >= 0 and int_input < len(chars_in_room_list):
+
+                        valid_target_boolean = True
+
+                        if combat_begun == True:
+                            if cur_combat_char.cur_combat_rank != chars_in_room_list[int_input].cur_combat_rank:
+                                valid_target_boolean = False
+
+                        if valid_target_boolean:
+                            if cur_game_state == GAME_STATE_PASSING_ITEM:
+                                #Add to recipient's backpack:
+                                chars_in_room_list[int_input].add_item_to_backpack(passing_item_id)  #add_item_to_backpack(item_id_to_add ,starting_equip_boolean = False):
+                                #Remove from this char's backpack:
+                                del inv_char.inv_list[passing_item_index]
+                                #return to inventory game state:
+                                passing_item_index = -1
+                                passing_item_id = -1
+                                cur_game_state = GAME_STATE_ACCESS_INV
+                            else:
+                                #Use item:
+                                passing_item_id.use_item(chars_in_room_list[int_input])
+
+                                #Destroy item, if applicable; remove from this char's backpack:
+                                if passing_item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
+                                    del inv_char.inv_list[passing_item_index]
+                                else:
+                                    inv_char.inv_list[passing_item_index] = -1
+
+                                #Return to inventory game state:
+                                passing_item_index = -1
+                                passing_item_id = -1
+                                cur_game_state = GAME_STATE_ACCESS_INV
                         else:
-                            print("You must select a valid character, try again.")
+                            invalid_pass_str = wrap_str("You must be occupying the same rank position as that character in order to pass them an item in combat.",TOTAL_LINE_W,False)
+                            print(invalid_pass_str)
+
                     else:
-                        print("You must select a valid character, try again.")
+                        print("That is not a valid character from the list, try again.")
                 except ValueError:
                     print("You must select a valid integer, try again.")
 
             #endregion
+        #endregion

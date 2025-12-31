@@ -107,6 +107,7 @@ class Character:
         self.inside_toxic_gas_boolean = False
         self.inside_vacuum_boolean = False
         self.healing_nanites_count = 0
+        self.adrenal_pen_count = 0
         self.suppressed_count = 0
         self.stun_count = 0
         self.spawn_minion_count = 0
@@ -159,20 +160,24 @@ class Character:
             self.evasion = ENUM_AVERAGE_EVASION_SCORE-1 #Worse than average evasion
 
             # Starting equipment:
-            item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
-            self.equip_item(item_to_equip, -1, True)
-            item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
-            self.add_item_to_backpack(item_to_equip, True)
-            #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
-            #self.equip_item(item_to_equip, -1, True)
-            item_to_equip = Item(ENUM_ITEM_MACHINE_PISTOL)
-            self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_SHOTGUN)
-            self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_POLICE_TRUNCHEON)
-            self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_RIOT_SHIELD)
-            self.add_item_to_backpack(item_to_equip, True)
+            starting_kit = False
+            if starting_kit:
+                item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
+            else:
+                item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
+                self.equip_item(item_to_equip, -1, True)
+                item_to_equip = Item(ENUM_ITEM_ASSAULT_RIFLE)
+                self.add_item_to_backpack(item_to_equip, True)
+                #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
+                #self.equip_item(item_to_equip, -1, True)
+                item_to_equip = Item(ENUM_ITEM_MACHINE_PISTOL)
+                self.add_item_to_backpack(item_to_equip, True)
+                item_to_equip = Item(ENUM_ITEM_SHOTGUN)
+                self.add_item_to_backpack(item_to_equip, True)
+                item_to_equip = Item(ENUM_ITEM_POLICE_TRUNCHEON)
+                self.add_item_to_backpack(item_to_equip, True)
+                item_to_equip = Item(ENUM_ITEM_RIOT_SHIELD)
+                self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_BIOLOGIST:
             self.name = "Chavrita, 'The Biologist'"
@@ -203,6 +208,8 @@ class Character:
             self.equip_item(item_to_equip, -1,True)
             item_to_equip = Item(ENUM_ITEM_MEDKIT)
             self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_HEALING_NANITE_INJECTOR)
+            self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_ENGINEER:
             self.name = "Amos, 'The Engineer'"
@@ -230,6 +237,8 @@ class Character:
             # self.equip_item(item_to_equip, item_to_equip.equip_slot_enum,True)
             item_to_equip = Item(ENUM_ITEM_ENGINEER_GARB)
             self.equip_item(item_to_equip, -1, True)
+            item_to_equip = Item(ENUM_ITEM_PLASMA_TORCH)
+            self.equip_item(item_to_equip, -1, True)
 
         elif char_type_enum == ENUM_CHARACTER_JANITOR:
             self.name = "Johns, 'The Janitor'"
@@ -255,6 +264,12 @@ class Character:
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_ENGINEER_GARB)
             self.equip_item(item_to_equip, -1,True)
+            item_to_equip = Item(ENUM_ITEM_MOP)
+            self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_TORQUE_WRENCH)
+            self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_FLASHLIGHT)
+            self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_MECH_MAGICIAN:
             self.name = "Avia, 'The Mechanician'"
@@ -323,8 +338,8 @@ class Character:
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             self.add_item_to_backpack(item_to_equip, True)
-            #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
-            #self.equip_item(item_to_equip, -1,True)
+            item_to_equip = Item(ENUM_ITEM_FRAG_GRENADE_LAUNCHER)
+            self.equip_item(item_to_equip, -1,True)
             #item_to_equip = Item(ENUM_ITEM_TOXIC_GRENADE_LAUNCHER)
             #self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_LASER_PISTOL)
@@ -337,6 +352,12 @@ class Character:
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_FLAME_THROWER)
             self.add_item_to_backpack(item_to_equip, True)
+
+            #Abilities:
+            self.add_ability(ENUM_ITEM_SHOCKING_GRASP)
+            self.add_ability(ENUM_ITEM_HAND_FLAMER)
+            self.add_ability(ENUM_ITEM_WRIST_ROCKETS)
+            self.add_ability(ENUM_ITEM_PERSONAL_SHIELD_GENERATOR)
 
         elif char_type_enum == ENUM_CHARACTER_SOLDIER:
             self.name = "Cooper, 'The Security Guard'"
@@ -378,20 +399,20 @@ class Character:
             self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_STUN_BATON)
             self.add_item_to_backpack(item_to_equip ,True)
-            item_to_equip = Item(ENUM_ITEM_FLASHLIGHT)
-            self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_ADRENAL_PEN)
             self.add_item_to_backpack(item_to_equip ,True)
             item_to_equip = Item(ENUM_ITEM_POLICE_TRUNCHEON)
             self.add_item_to_backpack(item_to_equip, True)
-            item_to_equip = Item(ENUM_ITEM_GRENADES)
+            item_to_equip = Item(ENUM_ITEM_GRENADE)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_TASER)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_SECURITY_VEST)
             self.add_item_to_backpack(item_to_equip, True)
-            #item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
-            #self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_MEDKIT)
+            self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_HEALING_NANITE_INJECTOR)
+            self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_SCIENTIST:
             self.name = "Darius, 'The Physicist'"
@@ -692,6 +713,29 @@ class Character:
             #abilities
             self.add_ability(ENUM_ITEM_LASER_PISTOL)
 
+        elif char_type_enum == ENUM_CHARACTER_NEUTRAL_LIGHT_SENTRY_DRONE:
+            self.name = "Light Sentry Drone"
+            self.hp_max = 4
+            self.hp_cur = self.hp_max
+            self.ability_points_cur = 3
+            self.ability_points_max = 3
+            self.sanity_cur = 20
+            self.sanity_max = 20
+            self.speed = 10
+
+            self.combat_ai_preference = ENUM_AI_COMBAT_STATIONARY_OVERWATCH
+
+            self.armor = 0
+            self.evasion = 0
+            self.res_fire = 50
+            self.res_vacuum = 100
+            self.res_gas = 100
+            self.res_electric = -100
+            #debug:
+            self.starting_combat_rank = ENUM_RANK_PC_FAR
+            #abilities
+            self.add_ability(ENUM_ITEM_LIGHT_MG)
+
         elif char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER:
             self.name = "Lumbering Mauler"
             self.hp_max = random.randint(14,18)
@@ -785,7 +829,7 @@ class Character:
                 else:
                     self.add_ability(ENUM_ITEM_MACHINE_PISTOL)
                     self.add_ability(ENUM_ITEM_RIOT_SHIELD)
-                self.add_ability(ENUM_ITEM_SUIT_MARINE)
+                self.add_ability(ENUM_ITEM_FLAK_ARMOR)
 
         elif char_type_enum == ENUM_CHARACTER_ENEMY_SODDEN_SHAMBLER:
             self.name = "Sodden Shambler"
@@ -874,6 +918,9 @@ class Character:
 
     def print_char_inv(self):
 
+        #Import helper module for displaying item stats:
+        from util.utils import return_item_stats_str, wrap_str
+
         print(f"{self.name} is wearing and carrying the following items:")
 
         for i in range(0,len(self.inv_list)):
@@ -898,9 +945,15 @@ class Character:
                 if self.inv_list[i].slot_designation_str == "Accessory":
                     equip_slot_str = f"({self.inv_list[i].slot_designation_str})"
                     intro_str += f"{equip_slot_str}"
+
+                #Add min-max damage, range, max_hits, and all status effects:
+                item_stats_str = return_item_stats_str(self.inv_list[i])
+                intro_str += item_stats_str
+
             else:
                 intro_str += f"{i}.) Nothing."
 
+            intro_str = wrap_str(intro_str,TOTAL_LINE_W,False)
             print(intro_str)
 
         print("")

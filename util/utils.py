@@ -20,6 +20,191 @@ from models.room import Room
 
 #region Define help funcs and essential funcs
 
+def return_item_stats_str(item_id,show_suppress_chance_boolean = False):
+
+    # Display min-max damage, range, max_hits, and all status effects for lh or rh items;
+    # or armor-evasion and other resistences/buffs/debuffs if body or accessory slot:
+    item_stats_str = ""
+
+    #Display min-max damage, range, max_hits:
+    item_is_lh_or_rh = False
+    item_is_body_or_accessory_slot = False
+    break_from_outer_loop = False
+
+    if isinstance(item_id.equip_slot_list,list):
+        for i in range(0,len(item_id.equip_slot_list)):
+            if isinstance(item_id.equip_slot_list[i],list):
+                for nested_i in range(0,len(item_id.equip_slot_list[i])):
+
+                    if ((item_id.equip_slot_list[i][nested_i] == ENUM_EQUIP_SLOT_LH or
+                    item_id.equip_slot_list[i][nested_i] == ENUM_EQUIP_SLOT_RH) and
+                    item_id.is_shield_boolean == False):
+                        item_is_lh_or_rh = True
+                        break_from_outer_loop = True
+                        break
+
+                    elif ((item_id.equip_slot_list[i][nested_i] == ENUM_EQUIP_SLOT_BODY or
+                    item_id.equip_slot_list[i][nested_i] == ENUM_EQUIP_SLOT_ACCESSORY) or
+                    item_id.is_shield_boolean == True):
+                        item_is_body_or_accessory_slot = True
+                        break_from_outer_loop = True
+                        break
+            else:
+                if break_from_outer_loop:
+                    break
+
+                if ((item_id.equip_slot_list[i] == ENUM_EQUIP_SLOT_LH or
+                item_id.equip_slot_list[i] == ENUM_EQUIP_SLOT_RH) and
+                item_id.is_shield_boolean == False):
+                    item_is_lh_or_rh = True
+                    break
+
+                elif (item_id.equip_slot_list[i] == ENUM_EQUIP_SLOT_BODY or
+                item_id.equip_slot_list[i] == ENUM_EQUIP_SLOT_ACCESSORY
+                or item_id.is_shield_boolean == True):
+                    item_is_body_or_accessory_slot = True
+                    break
+
+        if item_is_lh_or_rh:
+            #Gather relevant stats for lh or rh item:
+            aoe_count_str = item_id.aoe_count
+            if aoe_count_str == -1:
+                aoe_count_str = "ALL"
+
+            item_stats_str += f"Damage: {item_id.dmg_min}-{item_id.dmg_max}, range: {item_id.max_range}, max. hits: {aoe_count_str}."
+
+             # region Build status effects string:
+            item_status_effects_str_list = []
+
+            if item_id.burn_chance > 0:
+                item_status_effects_str_list.append(f" BURN: {item_id.burn_chance}%")
+            if item_id.bleed_chance > 0:
+                item_status_effects_str_list.append(f" BLEED: {item_id.bleed_chance}%")
+            if item_id.poison_chance > 0:
+                item_status_effects_str_list.append(f" POISON: {item_id.poison_chance}%")
+            if item_id.stun_chance > 0:
+                item_status_effects_str_list.append(f" STUN: {item_id.stun_chance}%")
+            if show_suppress_chance_boolean:
+                if item_id.suppressed_count > 0:
+                    item_status_effects_str_list.append(f" SUPPRESS: {item_id.suppress_chance}%")
+
+            if len(item_status_effects_str_list) >= 1:
+                #print(f"DEBUG: return_status_effects_str: status_effects_str == {status_effect_str_list}")
+                item_status_effects_str = ", ".join(item_status_effects_str_list)
+                item_stats_str += item_status_effects_str
+
+        #Gather relevant stats if this is a body or accessory item:
+        elif item_is_body_or_accessory_slot:
+            stat_change_str_list = []
+            if isinstance(item_id.stat_boost_list,list):
+                #print(f"DEBUG: return_item_stats_str: item_id.status_effect_list == {item_id.stat_boost_list}")
+                for i in range(0, len(item_id.stat_boost_list)):
+                    if i == ENUM_ITEM_STAT_BOOST_SECURITY and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Security: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_ENGINEERING and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Engineering: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_SCIENCE and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Science: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_STEALTH and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Stealth: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_STRENGTH and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Strength: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_WISDOM and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Wisdom: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_INTELLIGENCE and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Intelligence: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_DEXTERITY and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Dexterity: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_ACCURACY and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Accuracy: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_HP and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Hp Max: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_SANITY and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Sanity Max: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_ACTION_POINTS and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Sanity Max: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_ABILITY_POINTS and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Ability Points Max: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_SCAVENGING and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Scavenge: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_ARMOR and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Armor: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_EVASION and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Evasion: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_FIRE_RES and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Fire Res.: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_GAS_RES and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Gas Res.: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_VACUUM_RES and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Vacuum Res.: {item_id.stat_boost_list[i]}")
+                    elif i == ENUM_ITEM_STAT_BOOST_ELECTRIC_RES and item_id.stat_boost_list[i] != 0:
+                        stat_change_str_list.append(f"Electric Res.: {item_id.stat_boost_list[i]}")
+
+            #Append to str as string element if applicable:
+            if len(stat_change_str_list) >= 1:
+                #print(f"DEBUG: return_status_effects_str: status_effects_str == {status_effect_str_list}")
+                stat_change_str = ", ".join(stat_change_str_list)
+                item_stats_str += stat_change_str
+
+    return item_stats_str
+
+def return_status_effects_str(char_id):
+
+    status_effect_str_list = []
+
+    if char_id.burning_count > 0:
+        status_effect_str_list.append("burning")
+    if char_id.bleeding_count > 0:
+        status_effect_str_list.append("bleeding")
+    if char_id.infection_count > 0:
+        status_effect_str_list.append("infected")
+    if char_id.poisoned_count > 0:
+        status_effect_str_list.append("poisoned")
+    if char_id.stun_count > 0:
+        status_effect_str_list.append("stunned")
+    if char_id.suppressed_count > 0:
+        status_effect_str_list.append("suppressed")
+    if char_id.adrenal_pen_count > 0:
+        status_effect_str_list.append("adrenalized")
+    if char_id.healing_nanites_count > 0:
+        status_effect_str_list.append("regeneration nanites")
+    if char_id.healing_factor_boolean:
+        status_effect_str_list.append("healing factor")
+
+    if len(status_effect_str_list) >= 1:
+        #print(f"DEBUG: return_status_effects_str: status_effects_str == {status_effect_str_list}")
+        status_effects_str = ", ".join(status_effect_str_list)
+        full_str = "You have the following active status effects: " + status_effects_str + "."
+        return full_str
+    else:
+        return ""
+
+#Not even a necessary function - the constructor event for the class itself does most of the work:
+def spawn_minion(char_type_enum):
+
+    pass
+
+    #Only used for enemy ai - typically when a target is beyond their max_range
+def return_overwatch_rank(acting_char_id,combat_rank_list, char_max_range):
+    # Define move_dir as: "which direction is the target rank to my current position?"
+    if acting_char_id.cur_combat_rank > acting_char_id.targeted_rank:
+        move_dir = -1
+    elif acting_char_id.cur_combat_rank < acting_char_id.targeted_rank:
+        move_dir = 1
+    # elif it == this should never be the case
+
+    #Define max_range:
+
+    overwatch_rank = acting_char_id.cur_combat_rank + (char_max_range * move_dir)
+
+    # Cap:
+    if overwatch_rank < 0:
+        overwatch_rank = 0
+    elif overwatch_rank >= len(combat_rank_list):
+        overwatch_rank = len(combat_rank_list) - 1
+
+    return overwatch_rank
+
 def return_target_max_min_weapon_range(combat_rank_list,find_from_rank_int,acting_char_id):
 
     #Define iterate range:
@@ -165,7 +350,7 @@ def resolve_dot_effects(char_id):
                 if char_id.hp_cur < 0:
                     char_id.hp_cur = 0
                 char_id.burning_count -= 1
-                print(f"... {char_id.name} is still burning for {fire_dmg} fire damage!... \n")
+                print(f"... {char_id.name} is burning for {fire_dmg} fire damage!... \n")
         #Just clear their DOT stacks:
         else:
             char_id.burning_count = 0
@@ -244,6 +429,9 @@ def resolve_dot_effects(char_id):
     if char_id.suppressed_count > 0:
         char_id.suppressed_count -= 1
 
+    if char_id.adrenal_pen_count > 0:
+        char_id.adrenal_pen_count -= 1
+
     mention_stun_recovery = False
     if char_id.stun_count > 0:
         char_id.stun_count -= 1
@@ -253,13 +441,27 @@ def resolve_dot_effects(char_id):
     #Resolve passive healing effects:
     if char_id.healing_factor_boolean:
         if char_id.healing_factor_cd <= 0:
-            if char_id.hp_cur < char_id.hp_max:
+            if char_id.infection_count > 0:
+                char_id.infection_count -= 1
+                print(f"**... {char_id.name} has passively purged 1 infection point, due to their HEALING FACTOR.**\n")
+            elif char_id.hp_cur < char_id.hp_max:
                 char_id.hp_cur += 1
                 print(f"**... {char_id.name} has passively healed 1 hit point, due to their HEALING FACTOR.**\n")
             #Reset cd:
             char_id.healing_factor_cd = 2
         #Reduce cd
         char_id.healing_factor_cd -= 1
+
+    if char_id.healing_nanites_count > 0:
+        if char_id.hp_cur < char_id.hp_max:
+            char_id.hp_cur += 3
+            print(f"**... {char_id.name} has passively healed 3 hit points, due to their REGENERATION NANITES.**\n")
+            #Cap:
+            if char_id.hp_cur > char_id.hp_max:
+                char_id.hp_cur = char_id.hp_max
+        # Reduce cd
+        char_id.healing_nanites_count -= 1
+
 
     #Check to see if char 'wakes up'
     if char_id.hp_cur > 0 and char_id.unconscious_boolean:
@@ -485,7 +687,7 @@ def advance_combat_cur_char(cur_combat_char,combat_initiative_list,cur_combat_ro
     cur_combat_char.will_overwatch_boolean = False
     cur_combat_char.overwatch_rank = -1
     cur_combat_char.resolve_dot_effects_boolean = True
-
+    cur_combat_char.chosen_weapon = -1
 
     # Move to assign commands or execute ai
     if cur_combat_char.char_team_enum == ENUM_CHAR_TEAM_PC:
@@ -644,9 +846,12 @@ def organize_initiative_list(ar_to_pass):
         if isinstance(ar_to_pass[i],Character):
             char_inst = ar_to_pass[i]
             suppressed_debuff = 0
+            adrenal_pen_buff = 0
             if char_inst.suppressed_count > 0:
                 suppressed_debuff = ENUM_SUPPRESSED_SPEED_DEBUFF
-            char_inst.ran_init_val = random.randint(0,ENUM_MAX_RAN_INITIATIVE_VAL) + char_inst.speed - suppressed_debuff
+            if char_inst.adrenal_pen_count > 0:
+                adrenal_pen_buff = 2
+            char_inst.ran_init_val = random.randint(0,ENUM_MAX_RAN_INITIATIVE_VAL) + char_inst.speed - suppressed_debuff + adrenal_pen_buff
         else:
             print(f"organize_initiative_list: ar_to_pass[i]: {ar_to_pass[i]} was not an instance of Character, something went very wrong.")
             return False

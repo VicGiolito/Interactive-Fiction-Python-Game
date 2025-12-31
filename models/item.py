@@ -27,6 +27,10 @@ class Item:
         self.equippable_boolean = True
         self.usable_boolean = False
         self.changes_stats_boolean = False
+        self.combat_usable_boolean = False #Used in conjunction with items that can ALSO be used by characters in combat, like adrenal pen.
+        self.use_script  = -1 #For items or abilities that are 'used'
+        self.use_requires_target = -1 #For items or abilities that are 'used', usually destroyed after, and require a target- such as the medkit, adrenal pen, healing nanites, etc.
+        self.is_combat_abil_only_boolean = False #For abilities only; determines whether or not an ability is displayed on our list in the main game state.
 
         self.is_shield_boolean = False #Currently only used utils.py function check_for_equipped_weapon()
         self.can_suppress_boolean = False
@@ -41,7 +45,10 @@ class Item:
         self.evade_bonus = 0
         self.shield_bonus = 0
 
-        self.fire_chance = 0
+        self.ability_point_cost = 0
+        self.ability_cost_str = ""
+
+        self.burn_chance = 0
         self.poison_chance = 0
         self.bleed_chance = 0
         self.stun_chance = 0
@@ -82,6 +89,7 @@ class Item:
             self.can_overwatch_boolean = True
             self.bleed_chance = 25
             self.suppress_chance = 100
+            self.item_desc = "Your standard issue military grade shotgun most commonly used by security personnel. "
         elif self.item_enum == ENUM_ITEM_REVOLVER:
             self.dmg_min = 1
             self.dmg_max = 4
@@ -105,11 +113,12 @@ class Item:
             self.can_overwatch_boolean = True
             self.burn_chance = 25
             self.suppress_chance = 100
-        elif self.item_enum == ENUM_ITEM_GRENADES:
-            self.dmg_min = 4
-            self.dmg_max = 8
+        elif self.item_enum == ENUM_ITEM_GRENADE:
+            self.dmg_min = 8
+            self.dmg_max = 12
             self.single_use_boolean = True
             self.item_name = "FRAGMENTATION GRENADE"
+            self.equip_slot_list = [ENUM_EQUIP_SLOT_RH, ENUM_EQUIP_SLOT_LH]  # Indicates either hand can equip
             self.max_range = 2
             self.item_verb = "tosses the"
             self.item_dmg_str = "shredded"
@@ -117,8 +126,8 @@ class Item:
             self.burn_chance = 25
             self.bleed_chance = 25
         elif self.item_enum == ENUM_ITEM_FLAME_THROWER:
-            self.dmg_min = 2
-            self.dmg_max = 5
+            self.dmg_min = 3
+            self.dmg_max = 6
             self.item_name = "FLAMETHROWER"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 1
@@ -127,10 +136,10 @@ class Item:
             self.aoe_count = -1
             self.burn_chance = 75
             self.always_checks_status_effect_boolean = True
-        elif self.item_enum == ENUM_ITEM_HAND_FLAMER:
-            self.dmg_min = 1
-            self.dmg_max = 3
-            self.item_name = "TORVALD'S WRIST FLAMER"
+        elif self.item_enum == ENUM_ITEM_HAND_FLAMER: #Torvald ability
+            self.dmg_min = 3
+            self.dmg_max = 5
+            self.item_name = "PALM FLAMER"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 1
             self.item_verb = "spews fire with the"
@@ -138,6 +147,56 @@ class Item:
             self.aoe_count = -1
             self.burn_chance = 75
             self.always_checks_status_effect_boolean = True
+            self.ability_point_cost = 3
+            self.ability_cost_str = f"Spend {self.ability_point_cost} AP"
+            self.is_combat_abil_only_boolean = True
+        elif self.item_enum == ENUM_ITEM_WRIST_ROCKETS: #Torvald ability
+            self.dmg_min = 4
+            self.dmg_max = 8
+            self.item_name = "WRIST ROCKETS"
+            self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
+            self.max_range = 3
+            self.item_verb = "fires"
+            self.item_dmg_str = "burned"
+            self.aoe_count = 6
+            self.burn_chance = 25
+            self.bleed_chance = 25
+            self.suppress_chance = 50
+            self.stun_chance = 25
+            self.always_checks_status_effect_boolean = True
+            self.ability_point_cost = 5
+            self.ability_cost_str = f"Spend {self.ability_point_cost} AP"
+            self.is_combat_abil_only_boolean = True
+
+        elif self.item_enum == ENUM_ITEM_SHOCKING_GRASP: #Torvald ability
+            self.dmg_min = 2
+            self.dmg_max = 4
+            self.item_name = "SHOCKING GRASP"
+            self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
+            self.max_range = 0
+            self.item_verb = "grabs with a"
+            self.item_dmg_str = "burned"
+            self.aoe_count = 1
+            self.burn_chance = 10
+            self.stun_chance = 75
+            self.always_checks_status_effect_boolean = True
+            self.ability_point_cost = 2
+            self.ability_cost_str = f"Spend {self.ability_point_cost} AP"
+            self.is_combat_abil_only_boolean = True
+
+        #This skill is actually just handled directly with code in combat... not very efficient but fuck it.
+        elif self.item_enum == ENUM_ITEM_PERSONAL_SHIELD_GENERATOR: #Torvald ability
+            self.dmg_min = 0
+            self.dmg_max = 0
+            self.item_name = "PERSONAL SHIELD GENERATOR"
+            self.equip_slot_list = [ENUM_EQUIP_SLOT_BODY] #Indicates either hand can equip
+            self.max_range = 0
+            self.ability_point_cost = 3
+            self.ability_cost_str = f"Spend {self.ability_point_cost} AP to gain the following for 3 turns: "
+            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_ARMOR] = 2
+            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_EVASION] = 2
+            self.is_combat_abil_only_boolean = True
+
         elif self.item_enum == ENUM_ITEM_ROCKET_LAUNCHER:
             self.dmg_min = 12
             self.dmg_max = 24
@@ -211,7 +270,7 @@ class Item:
             self.item_verb = "swings the"
             self.item_dmg_str = "blundgeoned"
             self.max_range = 0
-            self.stun_chance = 50
+            self.stun_chance = 25
         elif self.item_enum == ENUM_ITEM_STUN_BATON: #Has a 100% chance of stunning enemies, minus their electric_res
             self.dmg_min = 1
             self.dmg_max = 2
@@ -266,6 +325,18 @@ class Item:
             self.can_overwatch_boolean = True
             self.bleed_chance = 25
             self.suppress_chance = 100
+        elif self.item_enum == ENUM_ITEM_LIGHT_MG:
+            self.dmg_min = 3
+            self.dmg_max = 6
+            self.item_name = "LIGHT MACHINE GUN"
+            self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
+            self.max_range = 4
+            self.item_verb = "fires the"
+            self.item_dmg_str = "shot"
+            self.can_suppress_boolean = True
+            self.can_overwatch_boolean = True
+            self.bleed_chance = 25
+            self.suppress_chance = 33
         elif self.item_enum == ENUM_ITEM_SPINE_PROJECTILE:
             self.dmg_min = 2
             self.dmg_max = 6
@@ -349,6 +420,17 @@ class Item:
             self.aoe_count = -1
             self.poison_chance = 75
             self.always_checks_status_effect_boolean = True
+        elif self.item_enum == ENUM_ITEM_FRAG_GRENADE_LAUNCHER:
+            self.dmg_min = 4
+            self.dmg_max = 8
+            self.item_name = "FRAGMENTAION GRENADE LAUNCHER"
+            self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
+            self.max_range = 5 #Debug value
+            self.item_verb = "fires the"
+            self.item_dmg_str = "shredded"
+            self.aoe_count = -1
+            self.burn_chance = 25
+            self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER:
             self.dmg_min = 0
             self.dmg_max = 0
@@ -425,8 +507,15 @@ class Item:
         elif self.item_enum == ENUM_ITEM_MEDKIT:
             self.single_use_boolean = True
             self.usable_boolean = True
-            self.item_name = "MED KIT"
+            self.item_name = "MEDICAL KIT"
             self.equippable_boolean = False
+            self.combat_usable_boolean = True
+        elif self.item_enum == ENUM_ITEM_HEALING_NANITE_INJECTOR:
+            self.single_use_boolean = True
+            self.usable_boolean = True
+            self.item_name = "PEN OF REGENERATION NANITES"
+            self.equippable_boolean = False
+            self.combat_usable_boolean = True
         elif self.item_enum == ENUM_ITEM_KIRAS_NOISY_GAME:
             self.single_use_boolean = False
             self.usable_boolean = True
@@ -479,8 +568,8 @@ class Item:
         elif self.item_enum == ENUM_ITEM_FLAK_ARMOR:
             self.item_name = "FLAK ARMOR"
             self.equip_slot_list = [ENUM_EQUIP_SLOT_BODY]
-            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_ARMOR] = 3
-            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_EVASION] = -1
+            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_ARMOR] = 2
+            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_EVASION] = 0
             self.changes_stats_boolean = True
         elif self.item_enum == ENUM_ITEM_SECURITY_VEST:
             self.item_name = "SECURITY VEST"
@@ -491,9 +580,9 @@ class Item:
         elif self.item_enum == ENUM_ITEM_SUIT_MARINE:
             self.item_name = "MARINE ARMOR"
             self.equip_slot_list = [ENUM_EQUIP_SLOT_BODY]
-            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_ARMOR] = 5
+            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_ARMOR] = 4
             self.stat_boost_list[ENUM_ITEM_STAT_BOOST_ELECTRIC_RES] = 100
-            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_EVASION] = -3
+            self.stat_boost_list[ENUM_ITEM_STAT_BOOST_EVASION] = -2
             self.stat_boost_list[ENUM_ITEM_STAT_BOOST_VACUUM_RES] = 50
             self.stat_boost_list[ENUM_ITEM_STAT_BOOST_GAS_RES] = 100
             self.stat_boost_list[ENUM_ITEM_STAT_BOOST_FIRE_RES] = 100
@@ -503,6 +592,7 @@ class Item:
             self.usable_boolean = True
             self.item_name = "ADRENAL PEN"
             self.equippable_boolean = False
+            self.combat_usable_boolean = True
         elif self.item_enum == ENUM_ITEM_DNA_TESTER:
             self.single_use_boolean = True
             self.usable_boolean = True
@@ -563,6 +653,17 @@ class Item:
             self.max_range = 0
             self.stun_chance = 25
 
+        elif self.item_enum == ENUM_ITEM_PLASMA_TORCH:
+            self.dmg_min = 1
+            self.dmg_max = 4
+            self.requires_ammo_boolean = False
+            self.item_name = "PLASMA TORCH"
+            self.equip_slot_list = [ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH] #Indicates either hand can equip
+            self.item_verb = "blazes the"
+            self.item_dmg_str = "burns"
+            self.max_range = 0
+            self.burn_chance = 75
+
         #Define slot_designation_str - currently only using the Accessory string, print_inv gets too cluttered otherwise
         if isinstance(self.equip_slot_list,list):
             if isinstance(self.equip_slot_list[0],list):
@@ -580,7 +681,7 @@ class Item:
         self.status_effect_list = []
         for i in range(0,ENUM_STATUS_EFFECT_TOTAL_EFFECTS):
             if i == ENUM_STATUS_EFFECT_FIRE:
-                self.status_effect_list.append(self.fire_chance)
+                self.status_effect_list.append(self.burn_chance)
             elif i == ENUM_STATUS_EFFECT_INFECT:
                 self.status_effect_list.append(self.infection_chance)
             elif i == ENUM_STATUS_EFFECT_COMPROMISE:
@@ -595,13 +696,43 @@ class Item:
                 self.status_effect_list.append(self.suppress_chance)
 
     def print_item_desc(self):
-        print(f"print_item_desc method called for item with name: {self.item_name}")
+        #print(f"print_item_desc method called for item with name: {self.item_name}")
         wrapped_item_desc_str = textwrap.fill(self.item_desc, TOTAL_LINE_W)
         print(wrapped_item_desc_str)
         print("")
 
-    def use_item(self):
-        print(f"use_item method for item with name: {self.item_name} hasn't been completed yet.\n")
+    #target_char_id: the char_id that we're 'u'sing the item on:
+    def use_item(self,target_char_id):
+
+        if self.requires_ammo_boolean:
+            mod_amount = 0
+            if self.item_enum == ENUM_ITEM_MEDKIT:
+                target_char_id.hp_cur += 5
+                #cap:
+                if target_char_id.hp_cur > target_char_id.hp_max:
+                    target_char_id.hp_cur = target_char_id.hp_max
+                #Remove applicable debuffs:
+                target_char_id.burning_count = 0
+                target_char_id.poisoned_count = 0
+                target_char_id.bleeding_count = 0
+                #Print result:
+                result_str = f"{target_char_id.name} has been healed for 5 hit points. They have also been cleared of the burning, poisoned, and bleeding status effects."
+                wrapped_message = textwrap.fill(result_str, width=TOTAL_LINE_W)
+                print(wrapped_message)
+                print("")
+                #If target was unconscious - 'wake' them up:
+                if target_char_id.unconscious_boolean == True and target_char_id.hp_cur > 0:
+                    target_char_id.unconscious_boolean = False
+                    print(f"{target_char_id.name} has woken up!\n")
+            elif self.item_enum == ENUM_ITEM_HEALING_NANITE_INJECTOR:
+                target_char_id.healing_nanites_count += 3
+                print(f"{target_char_id.name} has been injected with regeneration nanites. They will rapidly heal tissue damage for 3 turns.\n")
+            elif self.item_enum == ENUM_ITEM_ADRENAL_PEN:
+                target_char_id.adrenal_pen_count += 3
+                print(
+                    f"{target_char_id.name} has been injected with adrenaline. They will receive +2 accuracy and +2 speed for the next 3 turns.\n")
+
+
 
 
 
