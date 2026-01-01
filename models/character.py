@@ -75,6 +75,7 @@ class Character:
         self.chosen_weapon = -1
         self.targeted_rank = -1
         self.ai_inferior_alternate_wep = -1
+        self.hold_the_line_count = 0
 
         self.enemy_ai_move_boolean = False
         self.enemy_ai_fight_boolean = False
@@ -121,6 +122,7 @@ class Character:
         self.healing_factor_cd = 0
 
         self.revived_dialogue_str_list = -1
+        self.shield_bonus_count = 0 #For things like torvald's personal shield
 
         #region Define char stats....
         if char_type_enum == ENUM_CHARACTER_OGRE:
@@ -144,6 +146,10 @@ class Character:
             self.wisdom = 2
             self.dexterity = 0
             self.speed = -1
+
+            #Cragos unique resistences:
+            self.res_bleed = 25
+            self.res_stun = 25
 
             self.armor = 1
             self.healing_factor_boolean = True
@@ -180,11 +186,11 @@ class Character:
                 self.add_item_to_backpack(item_to_equip, True)
 
         elif char_type_enum == ENUM_CHARACTER_BIOLOGIST:
-            self.name = "Chavrita, 'The Biologist'"
+            self.name = "Revita, 'The Doctor'"
             self.hp_max = 6
             self.hp_cur = 6
-            self.ability_points_cur = 3
-            self.ability_points_max = 3
+            self.ability_points_cur = 10
+            self.ability_points_max = 10
             self.sanity_cur = 8
             self.sanity_max = 8
 
@@ -211,20 +217,24 @@ class Character:
             item_to_equip = Item(ENUM_ITEM_HEALING_NANITE_INJECTOR)
             self.add_item_to_backpack(item_to_equip, True)
 
+            #Abilities
+            self.add_ability(ENUM_ITEM_ENERGIZING_STIM_PRICK)
+            self.add_ability(ENUM_ITEM_FIELD_MEDICINE)
+
         elif char_type_enum == ENUM_CHARACTER_ENGINEER:
             self.name = "Amos, 'The Engineer'"
             self.hp_max = 8
             self.hp_cur = 8
-            self.ability_points_cur = 4
-            self.ability_points_max = 4
+            self.ability_points_cur = 10
+            self.ability_points_max = 10
             self.sanity_cur = 6
             self.sanity_max = 6
 
-            self.engineering = 5
+            self.engineering = 8
             self.security = 0
             self.science = 2
             self.scavenging = 0
-            self.stealth = 5
+            self.stealth = 4
 
             self.strength = 2
             self.intelligence = 6
@@ -239,6 +249,9 @@ class Character:
             self.equip_item(item_to_equip, -1, True)
             item_to_equip = Item(ENUM_ITEM_PLASMA_TORCH)
             self.equip_item(item_to_equip, -1, True)
+
+            #Abilities:
+            self.add_ability(ENUM_ITEM_SPAWN_LIGHT_SENTRY_GUN)
 
         elif char_type_enum == ENUM_CHARACTER_JANITOR:
             self.name = "Johns, 'The Janitor'"
@@ -275,8 +288,8 @@ class Character:
             self.name = "Avia, 'The Mechanician'"
             self.hp_max = 5
             self.hp_cur = 5
-            self.ability_points_cur = 3
-            self.ability_points_max = 3
+            self.ability_points_cur = 10
+            self.ability_points_max = 10
             self.sanity_cur = 10
             self.sanity_max = 10
 
@@ -291,7 +304,7 @@ class Character:
             self.wisdom = 7
             self.dexterity = 3
             self.speed = 5
-
+            #Base 'half-mechanical' resistences
             self.res_fire = 50
             self.res_vacuum = 50
             self.res_gas = 50
@@ -303,6 +316,12 @@ class Character:
             # Starting equipment
             item_to_equip = Item(ENUM_ITEM_PRISONER_JUMPSUIT)
             self.equip_item(item_to_equip, -1,True)
+
+            # Abilities:
+            self.add_ability(ENUM_ITEM_SPAWN_LIGHT_SENTINEL_DROID)
+            self.add_ability(ENUM_ITEM_SPAWN_LIGHT_FLAMER_DROID)
+            self.add_ability(ENUM_ITEM_SPAWN_LIGHT_SHOTGUN_DROID)
+            self.add_ability(ENUM_ITEM_SPAWN_BUZZSAW_DROID)
 
         elif char_type_enum == ENUM_CHARACTER_MERCENARY_MECH:
             self.name = "Torvald, 'The Cyborg'"
@@ -326,7 +345,7 @@ class Character:
             self.speed = 4
 
             self.armor = 1
-
+            #Base 'half-mechanical' resistences:
             self.res_fire = 50
             self.res_vacuum = 50
             self.res_gas = 50
@@ -414,6 +433,9 @@ class Character:
             item_to_equip = Item(ENUM_ITEM_HEALING_NANITE_INJECTOR)
             self.add_item_to_backpack(item_to_equip, True)
 
+            #Abilities:
+            self.add_ability(ENUM_ITEM_HOLD_THE_LINE)
+
         elif char_type_enum == ENUM_CHARACTER_SCIENTIST:
             self.name = "Darius, 'The Physicist'"
             self.hp_max = 5
@@ -485,14 +507,14 @@ class Character:
             self.wisdom = 8
             self.dexterity = 2
             self.speed = 5
-
+            #Base 'mechanical' resistences
             self.res_fire = 100
             self.res_vacuum = 100
             self.res_gas = 100
             self.res_electric = -100
 
         elif char_type_enum == ENUM_CHARACTER_CEO:
-            self.name = "Jens, 'The CEO'"
+            self.name = "Celeste, 'The CEO'"
             self.hp_max = 7
             self.hp_cur = 7
             self.ability_points_cur = 8
@@ -511,6 +533,9 @@ class Character:
             self.wisdom = 4
             self.dexterity = 2
             self.speed = 4
+
+            self.subjective_pronoun = "she"
+            self.possessive_pronoun = "her"
 
             item_to_equip = Item(ENUM_ITEM_OFFICER_JUMPSUIT)
             self.equip_item(item_to_equip ,-1,True)
@@ -691,8 +716,8 @@ class Character:
             self.add_ability(ENUM_ITEM_SHOTGUN)
 
         elif char_type_enum == ENUM_CHARACTER_NEUTRAL_WHIPSTICH_SENTINEL:
-            self.name = "Whipstich Sentinel Droid"
-            self.hp_max = random.randint(7,9)
+            self.name = "Whipstitch Sentinel Droid"
+            self.hp_max = 7
             self.hp_cur = self.hp_max
             self.ability_points_cur = 3
             self.ability_points_max = 3
@@ -746,7 +771,7 @@ class Character:
             self.sanity_max = 20
 
             self.armor = 1
-            self.evasion = 0
+            self.evasion = -1
             self.res_fire = 0
             self.res_vacuum = 100
             self.res_gas = 100

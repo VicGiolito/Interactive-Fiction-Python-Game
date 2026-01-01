@@ -17,6 +17,7 @@ GAME_STATE_INITIALIZING_NEW_TURN = 8
 GAME_STATE_COMBAT_CHOOSE_ATTACK = 9
 GAME_STATE_COMBAT_ITERATE_OVERWATCH_LIST = 10
 GAME_STATE_USE_TARGET_ITEM = 11
+GAME_STATE_ACCESS_ABIL_MAIN_GAME_STATE = 12
 
 ENUM_LOCATION_NIFFY = 0
 ENUM_LOCATION_PLANET = 1
@@ -112,38 +113,42 @@ ENUM_ITEM_RIOT_SHIELD = 38
 ENUM_ITEM_FLAK_SHIELD = 39
 ENUM_ITEM_PHASE_SHIELD = 40
 ENUM_ITEM_PLASMA_TORCH = 41 #Doubles as a decent melee weapon; adds to skill check when repairing doors.
-
 ENUM_ITEM_FISTS_CHILD = 42
 ENUM_ITEM_FISTS_ADULT = 43
 ENUM_ITEM_FISTS_GIANT = 44
-
 ENUM_ITEM_SPINE_PROJECTILE = 45
 ENUM_ITEM_SPINE_PROJECTILE_VENOMOUS = 46
 ENUM_ITEM_LARVA_INJECTION_BARB = 47 #Causes infection
 ENUM_ITEM_LARVA_WRITHING_TENDRIL = 48
-ENUM_ITEM_MONSTROUS_CLAW = 49
-
-ENUM_ITEM_KIRAS_NOISY_GAME = 50 #Can be triggered and then dropped; it causes enemies in adjacent rooms to come flocking toward it, potentially breaking down doors to do so.
-ENUM_ITEM_MACHINE_PISTOL = 51
-
-ENUM_ITEM_ACID_SPIT = 52
-ENUM_ITEM_ACID_CLOUD = 53
-ENUM_ITEM_SPINE_PROJECTILE_INFECTED = 54
-ENUM_ITEM_ACID_SACK = 55
-ENUM_ITEM_DESPERATE_CLAW = 56
-ENUM_ITEM_SECURITY_VEST = 57
-ENUM_ITEM_TOXIC_GRENADE_LAUNCHER = 58
-ENUM_ITEM_STICKY_SLIME = 59
-ENUM_ITEM_FILAMENT_SPRAY = 60
-ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER = 61
-ENUM_ITEM_CRUDE_BUZZSAW = 62
-ENUM_ITEM_HAND_FLAMER = 63 #Torvald ability
-ENUM_ITEM_LIGHT_MG = 64
-ENUM_ITEM_FRAG_GRENADE_LAUNCHER = 65
-ENUM_ITEM_WRIST_ROCKETS = 66 #Torvald ability
-ENUM_ITEM_SHOCKING_GRASP = 67 #Torvald ability
-ENUM_ITEM_PERSONAL_SHIELD_GENERATOR = 68  #Torvald ability
-ENUM_ITEM_TOTAL_ITEMS = 69
+ENUM_ITEM_FIELD_MEDICINE = 49 #Doctor ability, consumes turn
+ENUM_ITEM_ENERGIZING_STIM_PRICK = 50 #Avia ability, does not consume turn.
+ENUM_ITEM_MONSTROUS_CLAW = 51
+ENUM_ITEM_KIRAS_NOISY_GAME = 51 #Can be triggered and then dropped; it causes enemies in adjacent rooms to come flocking toward it, potentially breaking down doors to do so.
+ENUM_ITEM_MACHINE_PISTOL = 52
+ENUM_ITEM_ACID_SPIT = 53
+ENUM_ITEM_ACID_CLOUD = 54
+ENUM_ITEM_SPINE_PROJECTILE_INFECTED = 55
+ENUM_ITEM_ACID_SACK = 56
+ENUM_ITEM_DESPERATE_CLAW = 57
+ENUM_ITEM_SECURITY_VEST = 58
+ENUM_ITEM_TOXIC_GRENADE_LAUNCHER = 59
+ENUM_ITEM_STICKY_SLIME = 60
+ENUM_ITEM_FILAMENT_SPRAY = 61
+ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER = 62
+ENUM_ITEM_CRUDE_BUZZSAW = 63
+ENUM_ITEM_HAND_FLAMER = 64 #Torvald ability
+ENUM_ITEM_LIGHT_MG = 65
+ENUM_ITEM_FRAG_GRENADE_LAUNCHER = 66
+ENUM_ITEM_WRIST_ROCKETS = 67 #Torvald ability
+ENUM_ITEM_SHOCKING_GRASP = 68 #Torvald ability
+ENUM_ITEM_PERSONAL_SHIELD_GENERATOR = 69  #Torvald ability
+ENUM_ITEM_HOLD_THE_LINE = 70
+ENUM_ITEM_SPAWN_LIGHT_SENTRY_GUN = 71
+ENUM_ITEM_SPAWN_BUZZSAW_DROID = 72
+ENUM_ITEM_SPAWN_LIGHT_SENTINEL_DROID = 73
+ENUM_ITEM_SPAWN_LIGHT_FLAMER_DROID = 74
+ENUM_ITEM_SPAWN_LIGHT_SHOTGUN_DROID = 75
+ENUM_ITEM_TOTAL_ITEMS = 76
 
 ENUM_CHARACTER_MERCENARY_MECH = 0 #Sec - Comes equipped with built-in hand-flamer, laser, and wrist rockets which use ability points rather than ammunition.
 ENUM_CHARACTER_GAMER = 1 #Survivor - Hacker, gamer, a girl; only character that is small enough to use vents. Is better at hiding than other characters.
@@ -151,11 +156,11 @@ ENUM_CHARACTER_ENGINEER = 2 #Engineer - Can interact with engineering bay in use
 ENUM_CHARACTER_MECH_MAGICIAN = 3 #Engineer - A 'summoner': Can transform scrap into useful droids.
 ENUM_CHARACTER_SCIENTIST = 4 #Scientist
 ENUM_CHARACTER_CRIMINAL = 5 #Survivor; aka 'The Werewolf' - slowly transforms and will eventually turn on the player.
-ENUM_CHARACTER_SERVICE_DROID = 6 #Scientist
-ENUM_CHARACTER_OGRE = 7 #Sec - Tanky melee damage dealer, has
-ENUM_CHARACTER_JANITOR = 8 #Survivor - Comes equipped with a mop (clears various harmful slimes and sludges) and a fire extinguisher, as well as a few key cards. Is otherwise useless.
-ENUM_CHARACTER_PLAYBOY = 9 #Civilian - Is generally useless but a wealthy prince, gives extra completion points if you finish the game with him.
-ENUM_CHARACTER_CEO = 10 #Civilian - Is secretly a traitor?
+ENUM_CHARACTER_CEO = 6 #Civilian - Is secretly a traitor?
+ENUM_CHARACTER_SERVICE_DROID = 7 #Scientist
+ENUM_CHARACTER_OGRE = 8 #Sec - Tanky melee damage dealer, has
+ENUM_CHARACTER_JANITOR = 9 #Survivor - Comes equipped with a mop (clears various harmful slimes and sludges) and a fire extinguisher, as well as a few key cards. Is otherwise useless.
+ENUM_CHARACTER_PLAYBOY = 10 #Civilian - Is generally useless but a wealthy prince, gives extra completion points if you finish the game with him.
 ENUM_CHARACTER_BIOLOGIST = 11 #Scientist - Can interact with the laboratory in useful ways
 ENUM_CHARACTER_SOLDIER = 12 #Security - Standard and basic security choice, comes equipped with high quality items but is otherwise not exceptional.
 
@@ -258,11 +263,13 @@ ENUM_AI_COMBAT_STATIONARY_OVERWATCH = 5
 ENUM_AI_TOTAL_AI_PREFERENCES = 6
 
 #In general, for any stat, 7 (which represents a 70% chance) should be average
+#Misc., 'stat' type constants:
 ENUM_AVERAGE_ACCURACY_SCORE = 7
 ENUM_AVERAGE_EVASION_SCORE = 0
 ENUM_MIN_COMBAT_RAN_NUM = 0 #Should also be used for skill checks
 ENUM_MAX_COMBAT_RAN_NUM = 9
 ENUM_MAX_RAN_INITIATIVE_VAL = 6
+ENUM_STIM_PRICK_AP_BOOST = 2
 
 ENUM_STATUS_EFFECT_FIRE = 0
 ENUM_STATUS_EFFECT_BLEED = 1
@@ -277,6 +284,6 @@ ENUM_DOT_FIRE = 5
 ENUM_DOT_POISON = 4
 ENUM_BASE_UNCONSCIOUS_COUNT = 3 #This is how many turns (-1) that the characters get while in combat to be revived before dying.
 ENUM_SUPPRESSED_EVASION_DEBUFF = 2
-ENUM_SUPPRESSIVE_FIRE_ACCURACY_DEBUFF = 2
+ENUM_SUPPRESSIVE_FIRE_ACCURACY_DEBUFF = 1
 ENUM_SUPPRESSED_SPEED_DEBUFF =2
 

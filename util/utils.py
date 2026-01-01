@@ -20,6 +20,72 @@ from models.room import Room
 
 #region Define help funcs and essential funcs
 
+#Functions similarly to our INIT_COMBAT game state, we just check our pc_char_list,
+def check_combat_start(pc_char_list):
+
+    for i in range(0, len(pc_char_list)):
+        # Define pc_char vars:
+        pc_inst = pc_char_list[i]
+        occupying_grid_id = pc_inst.cur_grid
+        cur_combat_room_id = occupying_grid_id[pc_inst.cur_grid_y][pc_inst.cur_grid_x]
+
+        if isinstance(cur_combat_room_id.enemies_in_room_list, list) and len(cur_combat_room_id.enemies_in_room_list) > 0:
+            if pc_inst.participated_in_new_turn_battle == False:
+                return True
+
+    return False
+
+def execute_non_attack_ability(item_id,casting_char_id,combat_initiative_list,combat_rank_list):
+
+    abil_enum = item_id.item_enum
+
+    if abil_enum == ENUM_ITEM_PERSONAL_SHIELD_GENERATOR:
+        casting_char_id.shield_bonus_count = 4
+        print(f"{casting_char_id.name} has activated their {item_id.item_name}. They will receive +2 armor and +2 evasion for 3 turns.\n")
+
+    elif abil_enum == ENUM_ITEM_HOLD_THE_LINE:
+
+        for i in range(0,len(combat_initiative_list)):
+            if (combat_initiative_list[i].char_team_enum == ENUM_CHAR_TEAM_PC
+                    or combat_initiative_list[i].char_team_enum == ENUM_CHAR_TEAM_NEUTRAL):
+                combat_initiative_list[i].hold_the_line_count = 4
+
+        dialogue_str = wrap_str(f"'SMOKE OUT!' Cooper tosses a smoke grenade. (Party receives +2 evasion for 3 turns.)",TOTAL_LINE_W,False)
+        print(dialogue_str)
+        print("")
+
+    elif (abil_enum == ENUM_ITEM_SPAWN_LIGHT_SENTRY_GUN or abil_enum == ENUM_ITEM_SPAWN_BUZZSAW_DROID or
+    abil_enum == ENUM_ITEM_SPAWN_LIGHT_SENTINEL_DROID or abil_enum == ENUM_ITEM_SPAWN_LIGHT_FLAMER_DROID or
+    abil_enum == ENUM_ITEM_SPAWN_LIGHT_SHOTGUN_DROID):
+
+        char_enum = None
+        #Whipstich sentinel:
+        if abil_enum == ENUM_ITEM_SPAWN_LIGHT_SENTINEL_DROID:
+            char_enum = ENUM_CHARACTER_NEUTRAL_WHIPSTICH_SENTINEL
+        #Light sentry gun:
+        elif abil_enum == ENUM_ITEM_SPAWN_LIGHT_SENTRY_GUN:
+            char_enum = ENUM_CHARACTER_NEUTRAL_LIGHT_SENTRY_DRONE
+        #Jittering buzzsaw:
+        elif abil_enum == ENUM_ITEM_SPAWN_BUZZSAW_DROID:
+            char_enum = ENUM_CHARACTER_NEUTRAL_JITTERING_BUZZSAW
+        #Spinning scattershot:
+        elif abil_enum == ENUM_ITEM_SPAWN_LIGHT_SHOTGUN_DROID:
+            char_enum = ENUM_CHARACTER_NEUTRAL_SPINNING_SCATTERSHOT
+        #Fumigating flamer:
+        elif abil_enum == ENUM_ITEM_SPAWN_LIGHT_FLAMER_DROID:
+            char_enum = ENUM_CHARACTER_NEUTRAL_FUMIGATING_FLAMER
+
+        minion_inst = Character(char_enum, casting_char_id.cur_grid_x,
+                                casting_char_id.cur_grid_y, casting_char_id.cur_grid,
+                                ENUM_CHAR_TEAM_NEUTRAL, True)
+        # Add to end of initiative_queue and to attacker's current rank in combat_rank_list
+        combat_initiative_list.append(minion_inst)
+        combat_rank_list[casting_char_id.cur_combat_rank].append(minion_inst)
+        minion_inst.cur_combat_rank = casting_char_id.cur_combat_rank
+        # Print result:
+        print(f"{casting_char_id.name} has just finished building a {minion_inst.name} at this position!\n")
+
+
 def return_item_stats_str(item_id,show_suppress_chance_boolean = False):
 
     # Display min-max damage, range, max_hits, and all status effects for lh or rh items;
@@ -166,6 +232,10 @@ def return_status_effects_str(char_id):
         status_effect_str_list.append("suppressed")
     if char_id.adrenal_pen_count > 0:
         status_effect_str_list.append("adrenalized")
+    if char_id.hold_the_line_count > 0:
+        status_effect_str_list.append("smoke screen")
+    if char_id.shield_bonus_count > 0:
+        status_effect_str_list.append("personal shield")
     if char_id.healing_nanites_count > 0:
         status_effect_str_list.append("regeneration nanites")
     if char_id.healing_factor_boolean:
@@ -431,6 +501,17 @@ def resolve_dot_effects(char_id):
 
     if char_id.adrenal_pen_count > 0:
         char_id.adrenal_pen_count -= 1
+
+    if char_id.hold_the_line_count > 0:
+        char_id.hold_the_line_count -= 1
+        if char_id.hold_the_line_count <= 0:
+            result_str = wrap_str(f"{char_id.name}'s is no longer affected by the 'HOLD THE LINE' bonus (-2 evasion).\n",TOTAL_LINE_W,False)
+            print(result_str)
+
+    if char_id.shield_bonus_count > 0:
+        char_id.shield_bonus_count -= 1
+        if char_id.shield_bonus_count <= 0:
+            print(f"{char_id.name}'s PERSONAL SHIELD GENERATOR has flickered off.\n")
 
     mention_stun_recovery = False
     if char_id.stun_count > 0:

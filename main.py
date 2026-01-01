@@ -25,6 +25,7 @@ if __name__ == '__main__':
     attempting_overwatch_boolean = False #only used for choose weapon logic
     overwatch_loop_mode_enabled = False
     combat_begun = False #Reset to false in game_state GAME_STATE_INITIALIZING_NEW_TURN, only switched to true when iterating through pc_list and certain combat-related conditions met.
+    using_ability_boolean = False
 
     cur_char = -1
     cur_char_index = 0
@@ -112,13 +113,13 @@ if __name__ == '__main__':
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Lumbering mauler
-        for i in range(0, random.randint(2, 4)): #1,3
+        for i in range(0, random.randint(0, 0)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_LUMBERING_MAULER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Skittering Larva
-        for i in range(0, random.randint(0, 0)): #1,3
+        for i in range(0, random.randint(1, 1)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
@@ -178,7 +179,7 @@ if __name__ == '__main__':
         char_class_snippet = "Undefined"
         #Now define total_chars_bio_list:
         if i == ENUM_CHARACTER_OGRE:
-            total_chars_bio_list.append("Cragos, 'The Ogre':\n\nCragos was intended to be just another of the millions of faceless clones born into servitude by the Kethas Corporation, but a power surge in his gestation vat caused an excessive amount of growth hormone to be released into his developmental stew. As a result, he emerged from his birthing chamber weeks before his brothers and sisters, a hulking giant of a man with the mind of a child, and a misshapen face that only a mother could love... If only he had one.\n\nThe scientists at Keth Corp. were bemused by this unanticipated variant, and rigorously tested his physical and mental capabilities to determine the viability of his strain. They called it 'testing,' but Cragos would come to know the euphimism for what it truly was: torture.\n\nHe was only six weeks old by the time they had subjected him to a battery of tests that included blunt force trauma, precision tissue damage, and unimaginable G-forces, all to determine the tolerances of his physical structure, and also the rate of his healing factor, which surpassed even that of his kin. He was at least spared the psychological conditioning, not by any act of mercy, but merely because he was overlooked and forgotten after the researchers grew bored of his screams, labeling his mutation as 'UNSATISFACTORY.' He was deemed too large and clumsy to be useful on the battlefield, and too hideous to serve as steward in the gilded homes of the elite back in the Core.\n\nHe would have been reprocessed and recycled, in fact, liquified and fed back to his fellow clones as essential nutrients, had the interstellar freighter that was his home not been attacked by raiders from the Fringe. It was of course Keth Corp. policy to never reveal the secrets of their proprietary technology, and so they reduced the massive hulk of their starship to ruins in the depths of space, rather than submit to the pirate's boarding party. The brigands did not leave empty handed, nonetheless.\n\nThey found Cragos still clinging to life in a small pressurized compartment in a field of floating debris, like a cockroach that refused to die, or a caterpillar cocooned in stasis, patiently awaiting chrysalis. Unlike the scientists at Keth Corp., they found good use for his muscle among their ranks, all right.\n\nBanditry was their trade, and his healing factor an invaluable asset. The absence of psychological conditioning had made it possible for Cragos to adjust to their nomadic lifestyle, to view himself as an invidual at last, as a person who could inspire respect--if never love.\n\nThey named him 'Cragos,' after the son of the stone god who ruled the mountains of their homeworld. And as the years passed he became well known as the most vicious and relentless of their clan. Eventually he outlived them all, and when the very last of their clan had been struck down by enforcers from the Core, Cragos struck out into the void to earn his own coin, plying his trade as a mercenary for hire, a dealer of death and punishment alike. Yet he never forgot the faces of his tormentors who had given him life, and always he hoarded the horror of his past as fuel for future conquests.\n\nIt was a kidnapping job gone sideways that found him in a stasis chamber aboard the Keth Corp. research vessel 'Niffy.' And there he remains: a caged animal once more, eyes closed, yet not sleeping--always dreaming of vengeance against the inexhaustible and inexorable corporation that made him... Always dreaming... And always promising pain.\n\nGameplay features: Cragos is a resilient tank who deals double damage with melee weapons and extra damage with his fists. He is very fond of wrestling opponents and dismembering them with his bare hands, often putting himself into compromised positions in order to do so. His RAGE meter builds while fighting and when it reaches 10, he becomes uncontrollable for 6-10 turns, smashing room features, items, or attacking friendly characters. He has poor accuracy when using ranged weapons, and therefore should rely upon weapons that offer multiple hits, such as the shotgun or flame thrower. He is also too large to be able to use the 'HIDE' command. Abilities: Healing Factor: automatically heals 1 hp and 1 infection point every 3-4 turns (passive); Thick Hide: +2 armor value (passive)")
+            total_chars_bio_list.append("Cragos, 'The Ogre':\n\nCragos was intended to be just another of the millions of faceless clones born into servitude by the Kethas Corporation, but a power surge in his gestation vat caused an excessive amount of growth hormone to be released into his developmental stew. As a result, he emerged from his birthing chamber weeks before his brothers and sisters, a hulking giant of a man with the mind of a child, and a misshapen face that only a mother could love... If only he had one.\n\nThe scientists at Keth Corp. were bemused by this unanticipated variant, and rigorously tested his physical and mental capabilities to determine the viability of his strain. They called it 'testing,' but Cragos would come to know the euphimism for what it truly was: torture.\n\nHe was only six weeks old by the time they had subjected him to a battery of tests that included blunt force trauma, precision tissue damage, and unimaginable G-forces, all to determine the tolerances of his physical structure, and also the rate of his healing factor, which surpassed even that of his kin. He was at least spared the psychological conditioning, not by any act of mercy, but merely because he was overlooked and forgotten after the researchers grew bored of his screams, labeling his mutation as 'UNSATISFACTORY.' He was deemed too large and clumsy to be useful on the battlefield, and too hideous to serve as steward in the gilded homes of the elite back in the Core.\n\nHe would have been reprocessed and recycled, in fact, liquified and fed back to his fellow clones as essential nutrients, had the interstellar freighter that was his home not been attacked by raiders from the Fringe. It was of course Keth Corp. policy to never reveal the secrets of their proprietary technology, and so they reduced the massive hulk of their starship to ruins in the depths of space, rather than submit to the pirates' boarding party. The brigands did not leave empty handed, nonetheless.\n\nThey found Cragos still clinging to life in a small pressurized compartment in a field of floating debris, like a cockroach that refused to die, or a caterpillar cocooned in stasis, patiently awaiting chrysalis. Unlike the scientists at Keth Corp., they found good use for his muscle among their ranks, all right.\n\nBanditry was their trade, and his healing factor an invaluable asset. The absence of psychological conditioning had made it possible for Cragos to adjust to their nomadic lifestyle, to view himself as an invidual at last, as a person who could inspire respect--if never love.\n\nThey named him 'Cragos,' after the son of the stone god who ruled the mountains of their homeworld. And as the years passed he became well known as the most vicious and relentless of their clan. Eventually he outlived them all, and when the very last of their clan had been struck down by enforcers from the Core, Cragos struck out into the void to earn his own coin, plying his trade as a mercenary for hire, a dealer of death and punishment alike. Yet he never forgot the faces of his tormentors who had given him life, and always he hoarded the horror of his past as fuel for future conquests.\n\nIt was a kidnapping job gone sideways that found him in a stasis chamber aboard the Keth Corp. research vessel 'Niffy.' And there he remains: a caged animal once more, eyes closed, yet not sleeping--always dreaming of vengeance against the inexhaustible and inexorable corporation that made him... Always dreaming... And always promising pain.\n\nGameplay features: Cragos is a resilient tank who deals double damage with melee weapons and extra damage with his fists. He is very fond of wrestling opponents and dismembering them with his bare hands, often putting himself into compromised positions in order to do so. His RAGE meter builds while fighting and when it reaches 10, he becomes uncontrollable for 6-10 turns, smashing room features, items, or attacking friendly characters. He has poor accuracy when using ranged weapons, and therefore should rely upon weapons that offer multiple hits, such as the shotgun or flame thrower. He is also too large to be able to use the 'HIDE' command. Abilities: Healing Factor: automatically heals 1 hp and 1 infection point every 3-4 turns (passive); Thick Hide: +2 armor value (passive)")
             primary_role_str = "SECURITY"
             char_class_snippet = "This stubbled brute almost looks like the standard variant of the Keth Corporation clone, only... bigger. Much bigger. Uglier, too."
         elif i == ENUM_CHARACTER_SOLDIER:
@@ -200,11 +201,11 @@ if __name__ == '__main__':
         elif i == ENUM_CHARACTER_ENGINEER:
             total_chars_bio_list.append("This character's backstory is not yet defined.\n\nGameplay features: ")
             primary_role_str = "ENGINEER"
-            char_class_snippet = "The blue overcoat emblazoned with the Keth Corporation's sigil of a star cresting the shoulder of a shadowed planet suggests that this is a company man. Someone from the engineering department, most likely."
+            char_class_snippet = "His blue overcoat is emblazoned with the Keth Corporation's sigil of a star cresting the shoulder of a shadowed planet. The patch suggests that this is a company man, while the tool belt around his waist indicates that he works for the engineering department, most likely."
         elif i == ENUM_CHARACTER_CEO:
             total_chars_bio_list.append("This character's backstory is not yet defined.")
             primary_role_str = "CIVILIAN"
-            char_class_snippet = "Oh how the mighty have fallen! This face has been seen by almost everyone with a video feed this side of the galaxy. It's Jens, Chief Executive Officer of the interstellar research and development corporation Zephyr Industries. One can only wonder how he lost his first-class seat."
+            char_class_snippet = "Oh how the mighty have fallen! This face has been seen by almost everyone with a video feed this side of the galaxy. It's Celeste Mattix, Chief Executive Officer of the interstellar research and development corporation Zephyr Industries. One can only wonder how she lost her first-class seat."
         elif i == ENUM_CHARACTER_SERVICE_DROID:
             total_chars_bio_list.append("This character's backstory is not yet defined.")
             primary_role_str = "ENGINEER"
@@ -228,7 +229,7 @@ if __name__ == '__main__':
         elif i == ENUM_CHARACTER_SCIENTIST:
             total_chars_bio_list.append("This character's backstory is not yet defined.")
             primary_role_str = "SCIENTIST"
-            char_class_snippet = "Another gray beard in a white lab coat, they seem to populate most star ships--especially those that operate well outside of the known regions of space. This one has an imperious look and a slight sneer, even in stasis."
+            char_class_snippet = "Another bespeckled gray beard in a white lab coat, they seem to populate most star ships--especially those that operate well outside of the known regions of space. This one has an imperious look and a slight sneer, even in stasis."
         else:
             total_chars_bio_list.append("This character's backstory is not yet defined.")
         #Add stats string to total_char_stats_list
@@ -378,8 +379,10 @@ if __name__ == '__main__':
                             print("")
                             #Define cur_char:
                             cur_char = pc_char_list[0]
-                            #change game state:
-                            cur_game_state = GAME_STATE_INITIALIZING_NEW_TURN
+                            #change game state to initialize new turn, if applicable:
+                            enter_combat_boolean = check_combat_start(pc_char_list)
+                            if enter_combat_boolean:
+                                cur_game_state = GAME_STATE_INITIALIZING_NEW_TURN
 
         #endregion for game_state == choose_chars
 
@@ -411,10 +414,12 @@ if __name__ == '__main__':
             #room, then start a battle:
             combat_begun = False
             for i in range(0,len(pc_char_list)):
-                new_turn_cur_char_index = i
+                #Define pc_char vars:
+                new_turn_cur_char_index = i #Where else is this used? Remove?
                 pc_inst = pc_char_list[i]
                 occupying_grid_id = pc_inst.cur_grid
-                cur_combat_room_id =  occupying_grid_id[pc_inst.cur_grid_y][pc_inst.cur_grid_x]
+                cur_combat_room_id = occupying_grid_id[pc_inst.cur_grid_y][pc_inst.cur_grid_x]
+
                 if isinstance(cur_combat_room_id.enemies_in_room_list,list) and len(cur_combat_room_id.enemies_in_room_list) > 0:
                     if pc_inst.participated_in_new_turn_battle == False:
                         #Print discovery string:
@@ -495,7 +500,7 @@ if __name__ == '__main__':
 
             #Reset
             pc_collapsed_from_dot = False
-
+            using_ability_boolean = False
             combat_concluded_boolean = False
 
             # Store in case the cur_char dies as a result of DOT damage:
@@ -593,15 +598,20 @@ if __name__ == '__main__':
                 overwatch_avail_boolean = return_overwatch_or_suppress_capable(cur_combat_char,True)
                 suppress_avail_boolean = return_overwatch_or_suppress_capable(cur_combat_char, False)
 
-                battlefield_summary_str = wrap_str(f"Round {cur_combat_round} of the battle is underway. If you imagine a 'center-line' separating your half of the room from the enemy's half of the room at the start of the battle, this is what you see:",TOTAL_LINE_W,False)
+                battlefield_summary_str = wrap_str(f"Round {cur_combat_round} of the battle is underway. If you imagine a center-line separating your half of the room from the enemy's half at the start of the battle, this is what you see:",TOTAL_LINE_W,False)
                 print(battlefield_summary_str)
                 print_combat_ranks(combat_rank_list)
                 print("")
                 #Use vars to account for things like adrenal pen and other abilities, which boost stats in combat only - they don't permanently boost the actual stat.
                 total_char_spd = cur_combat_char.speed
                 total_char_acc = cur_combat_char.accuracy
-                total_char_arm = cur_combat_char.armor
+                total_char_armor = cur_combat_char.armor
                 total_char_evasion = cur_combat_char.evasion
+                if cur_combat_char.shield_bonus_count > 0:
+                    total_char_evasion += 2
+                    total_char_armor += 2
+                if cur_combat_char.hold_the_line_count > 0:
+                    total_char_evasion += 2
                 if cur_combat_char.adrenal_pen_count > 0:
                     total_char_spd += 2
                     total_char_acc += 2
@@ -609,7 +619,8 @@ if __name__ == '__main__':
                 char_summary_str = wrap_str(f"You are {cur_combat_char.name}. "
                                             f"You have {cur_combat_char.hp_cur}/{cur_combat_char.hp_max} hit points, "
                                             f"{cur_combat_char.sanity_cur}/{cur_combat_char.sanity_max} sanity points, "
-                                            f"{total_char_arm} armor, "
+                                            f"{cur_combat_char.ability_points_cur}/{cur_combat_char.ability_points_max} ability points, "
+                                            f"{total_char_armor} armor, "
                                             f"{total_char_evasion} evasion, "
                                             f"{total_char_acc} accuracy, "
                                             f"and {total_char_spd} speed. "
@@ -779,11 +790,20 @@ if __name__ == '__main__':
                 print("GAME_STATE_COMBAT_CHOOSE_ATTACK: neither choose_weapon_boolean or choose_abil_boolean == true, something went wrong.")
 
             #Print the weapon or ability name, index, along with relevant info like max_range, min-max damage
-            for i in range(0,len(ar_to_use)):
-                full_item_str = wrap_str(f"{desc_str} {i}.) {ar_to_use[i].item_name}: {ar_to_use[i].ability_cost_str}: {return_item_stats_str(ar_to_use[i])}.",TOTAL_LINE_W,False)
-                print(full_item_str)
+            if choose_ability_boolean:
+                for i in range(0,len(ar_to_use)):
+                    full_item_str = wrap_str(f"{desc_str} {i}.) {ar_to_use[i].item_name}: {ar_to_use[i].ability_cost_str} {return_item_stats_str(ar_to_use[i])}",TOTAL_LINE_W,False)
+                    print(full_item_str)
+            elif choose_weapon_boolean:
+                for i in range(0,len(ar_to_use)):
+                    full_item_str = wrap_str(f"{desc_str} {i}.) {ar_to_use[i].item_name}: {return_item_stats_str(ar_to_use[i])}",TOTAL_LINE_W,False)
+                    print(full_item_str)
             print("")
-            input_str = input("Enter the corresponding number associated with the weapon or ability, or enter 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
+            if choose_weapon_boolean:
+                input_str = input("Enter the corresponding number associated with the weapon, or enter 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
+            else:
+                input_str = input(
+                    "Enter the corresponding number associated with the ability, or enter 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
             print("")
             if input_str == "B" or input_str == "BACKUP":
                 cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
@@ -799,6 +819,7 @@ if __name__ == '__main__':
                                 ammo_required = 2
                             if ammo_total < ammo_required:
                                 sufficient_ammo = False
+                            #Insufficient ammo case - allow player to use fists instead, without unequipping all of their items:
                             if sufficient_ammo == False and ar_to_use[input_int].requires_ammo_boolean == True:
                                 #You don't have enough ammunition to use that weapon! You could try equipping a different weapon, or attack with your{char specific fists}. Enter 'F' for FISTS to attack with your fists. Any other command will return you to the combat options screen.”
                                 print("You don't have enough ammunition to use that weapon! You could try equipping a different weapon, or attack with your bare fists.")
@@ -809,27 +830,85 @@ if __name__ == '__main__':
                                     cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
                                 else:
                                     cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+                            #Sufficient ammo case:
                             else:
-                                if not attempting_overwatch_boolean:
-                                    cur_combat_char.chosen_weapon = ar_to_use[input_int]
-                                    cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+                                valid_attack = True
 
-                                if attempting_overwatch_boolean:
-                                    if ar_to_use[input_int].can_overwatch_boolean:
-                                        cur_combat_char.chosen_weapon = ar_to_use[input_int]
-                                        cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
-                                    else:
-                                        print("This weapon does not support overwatch mode.")
+                                #Check ability point restriction:
+                                if choose_ability_boolean and cur_combat_char.ability_points_cur < ar_to_use[input_int].ability_point_cost:
+                                    valid_attack = False
 
-                                if attempting_suppress_boolean:
-                                    if ar_to_use[input_int].can_suppress_boolean:
-                                        cur_combat_char.chosen_weapon = ar_to_use[input_int]
-                                        cur_combat_char.chosen_weapon.suppressive_fire_mode_enabled = False #Reset; this will be enabled when a valid rank is chosen
-                                        cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
-                                    else:
-                                        print("This weapon does not support suppressive fire mode.")
+                                if valid_attack:
+                                    if not attempting_overwatch_boolean:
+                                        # Reduce ap, if applicable:
+                                        if choose_ability_boolean:
 
+                                            #Things like Torvald's shield generator, cooper's buffs/debuffs, etc.,
+                                            # these things do NOT require a target:
+                                            if ar_to_use[input_int].non_attack_ability_boolean == True:
 
+                                                execute_non_attack_ability(ar_to_use[input_int],cur_combat_char,combat_initiative_list,combat_rank_list)
+
+                                                #Use abil points
+                                                cur_combat_char.ability_points_cur -= ar_to_use[input_int].ability_point_cost
+
+                                                #Return the to ASSIGN_COMMAND
+                                                if ar_to_use[input_int].abil_passes_turn_boolean == False:
+                                                    cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+
+                                                #Call advance_cur_combat_char
+                                                elif ar_to_use[input_int].abil_passes_turn_boolean == True and ar_to_use[input_int].use_requires_target_boolean == False:
+                                                    # Advance our cur_char:
+                                                    prev_cur_combat_char_index = combat_initiative_list.index(
+                                                        cur_combat_char)
+
+                                                    cur_combat_char, cur_combat_round, cur_game_state, combat_initiative_list = advance_combat_cur_char(
+                                                        cur_combat_char,
+                                                        combat_initiative_list,
+                                                        cur_combat_room_id,
+                                                        cur_combat_round,
+                                                        prev_cur_combat_char_index,
+                                                        f"moving away from game_state GAME_STATE_COMBAT_CHOOSE_ATTACK: pc char: {cur_combat_char.name} just used an ability with non_attack_ability_boolean == True, and abil_passes_turn_boolean == True. It was: {ar_to_use[input_int].item_name}.")
+
+                                                    continue_str = input(
+                                                        "Press enter to continue to the next combatant in the initiative queue.\n")
+                                                    print("")
+
+                                            elif ar_to_use[input_int].non_attack_ability_boolean == False:
+
+                                                #We'll simply use this ability as a weapon item and move to GAME_STATE_COMBAT_TARGET_RANK:
+                                                if ar_to_use[input_int].use_requires_target_boolean == False:
+                                                    cur_combat_char.chosen_weapon = ar_to_use[input_int]
+                                                    cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+
+                                                #We'll move to USE_ITEM game state and attempt to use the item there:
+                                                elif ar_to_use[input_int].use_requires_target_boolean == True:
+                                                    passing_item_id = ar_to_use[input_int]
+                                                    cur_game_state = GAME_STATE_USE_TARGET_ITEM
+                                                    using_ability_boolean = True
+
+                                        #Move to execute combat if this was not an ability item:
+                                        elif (choose_ability_boolean == False):
+                                            cur_combat_char.chosen_weapon = ar_to_use[input_int]
+                                            cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+
+                                    if attempting_overwatch_boolean:
+                                        if ar_to_use[input_int].can_overwatch_boolean:
+                                            cur_combat_char.chosen_weapon = ar_to_use[input_int]
+                                            cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+                                        else:
+                                            print("This weapon does not support overwatch mode.")
+
+                                    if attempting_suppress_boolean:
+                                        if ar_to_use[input_int].can_suppress_boolean:
+                                            cur_combat_char.chosen_weapon = ar_to_use[input_int]
+                                            cur_combat_char.chosen_weapon.suppressive_fire_mode_enabled = False #Reset; this will be enabled when a valid rank is chosen
+                                            cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+                                        else:
+                                            print("This weapon does not support suppressive fire mode.")
+                                #Print insufficient AP:
+                                elif valid_attack == False:
+                                    print(f"You don't have enough ability points to use that ability.")
                         else:
                             print("You can't attack with a shield, try again.")
                     else:
@@ -914,6 +993,10 @@ if __name__ == '__main__':
 
                                 #Move to execute action:
                                 else:
+                                    #Reduce AP, if applicable:
+                                    if choose_ability_boolean:
+                                        cur_combat_char.ability_points_cur -= cur_combat_char.chosen_weapon.ability_point_cost
+                                    #Move to fight phase:
                                     cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
                         else:
                             print("There are no valid enemy targets in this position to attack, try again.")
@@ -1424,6 +1507,8 @@ if __name__ == '__main__':
                                             #Print result:
                                             print(f"A {minion_inst.name} has just violently spawned from the {attacking_char.name}'s back!\n")
 
+                                        attacking_char.spawn_minion_count = 0
+
                                     # Targeted rank has already been set, just move to fight:
                                     attacking_char.enemy_ai_fight_boolean = True
                                     print(
@@ -1735,11 +1820,19 @@ if __name__ == '__main__':
                                         #Ogre melee character gets slight to_hit bonus with melee weapons
                                         if attacking_char.char_type_enum == ENUM_CHARACTER_OGRE and attacking_char.chosen_weapon.max_range == 0:
                                             attacker_accuracy += 1
-                                        #Define defender evasion:
+                                        #Define defender evasion and armor:
                                         defender_evasion = defending_char.evasion
+                                        defender_armor = defending_char.armor
                                         #Apply 'dodging' bonus:
                                         if defending_char.dodge_bonus_boolean:
                                             defender_evasion += 1
+                                        #Apply 'shield bonus':
+                                        if defending_char.shield_bonus_count > 0:
+                                            defender_evasion += 2
+                                            defender_armor += 2
+                                        #Apply 'hold the line' bonus:
+                                        if defending_char.hold_the_line_count > 0:
+                                            defender_evasion += 2
                                         #Apply 'suppressed' malus:
                                         if defending_char.suppressed_count > 0:
                                             defender_evasion -= ENUM_SUPPRESSED_EVASION_DEBUFF
@@ -1768,7 +1861,7 @@ if __name__ == '__main__':
                                             if attacking_char.char_type_enum == ENUM_CHARACTER_OGRE and attacking_char.chosen_weapon.max_range == 0:
                                                 dmg_roll += random.randint(1,3)
                                             #Cap total damage at no less than 0:
-                                            total_dmg = max(0,dmg_roll-defending_char.armor)
+                                            total_dmg = max(0,dmg_roll-defender_armor)
                                             #Check death, reduce hp, check status effects, etc:
                                             if total_dmg > 0:
                                                 defending_char.hp_cur -= total_dmg
@@ -1962,10 +2055,6 @@ if __name__ == '__main__':
                             continue_str = input("Press enter to continue to the next combatant in the initiative queue.\n")
                             print("")
 
-                #Await player input? (if enemy ai resolved but didn't move into fight mode (maybe it moved, maybe it moved and triggered overwatch):
-                #else:
-                    #continue_str = input("Press enter to continue to the next combatant in the initiative queue.\n")
-
         # endregion
 
         #region game_state == GAME_STATE_COMBAT_ITERATE_OVERWATCH_LIST:
@@ -2011,7 +2100,7 @@ if __name__ == '__main__':
 
                 #Tell player which character they are currently inhabiting, along with their primary stats (hp, stamina, sanity):
                 status_effect_str = return_status_effects_str(cur_char)
-                char_status_str = wrap_str(f"You are {cur_char.name}. You have {cur_char.hp_cur}/{cur_char.hp_max} hit points, {cur_char.ability_points_cur}/{cur_char.ability_points_cur} ability points, {cur_char.sanity_cur}/{cur_char.sanity_cur} sanity points, {cur_char.armor} armor, and {cur_char.evasion} evasion. {status_effect_str}",TOTAL_LINE_W,False)
+                char_status_str = wrap_str(f"You are {cur_char.name}. You have {cur_char.hp_cur}/{cur_char.hp_max} hit points, {cur_char.ability_points_cur}/{cur_char.ability_points_max} ability points, {cur_char.sanity_cur}/{cur_char.sanity_max} sanity points, {cur_char.armor} armor, and {cur_char.evasion} evasion. {status_effect_str}",TOTAL_LINE_W,False)
                 print(char_status_str)
                 print_room_recap = False #Set to false so we don't see all of this again whenever the player performs a trivial action; is reset to True whenever the player moves to a different room, or uses the 'L'ook command:
                 print("")
@@ -2343,7 +2432,7 @@ if __name__ == '__main__':
             if cur_game_state == GAME_STATE_PASSING_ITEM:
                 print("\nPass item to which character in the same room?\n")
             else:
-                print("\nWhich character in the same room should you use the item on?\n")
+                print("\nWhich character in the same room or rank should you use the item or ability on?\n")
             list_to_target = -1
             chars_in_room_list = []
             if combat_begun:
@@ -2355,7 +2444,13 @@ if __name__ == '__main__':
 
             if isinstance(list_to_target, list) and len(list_to_target) > 1:
                 for i in range(len(list_to_target)):
-                    if list_to_target[i] != inv_char:
+                    #Forbid chars in a different rank if we're in combat;
+                    # And forbid the self if we're passing an item:
+                    if combat_begun and list_to_target[i].cur_combat_rank != inv_char.cur_combat_rank:
+                        continue
+                    if cur_game_state == GAME_STATE_PASSING_ITEM and list_to_target[i] == inv_char:
+                        continue
+                    else:
                         chars_in_room_list.append(list_to_target[i])
 
             #Actually print our chars_in_room_list:
@@ -2367,10 +2462,16 @@ if __name__ == '__main__':
             print("")
             input_str = input().upper().strip()
             if input_str == "B" or input_str == "BACKUP":
-                # return to inventory game state:
-                passing_item_index = -1
-                passing_item_id = -1
-                cur_game_state = GAME_STATE_ACCESS_INV
+                if using_ability_boolean == False:
+                    # return to inventory game state:
+                    passing_item_index = -1
+                    passing_item_id = -1
+                    cur_game_state = GAME_STATE_ACCESS_INV
+                elif using_ability_boolean:
+                    # return to inventory game state:
+                    passing_item_index = -1
+                    passing_item_id = -1
+                    cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
             else:
                 try:
                     int_input = int(input_str)
@@ -2394,21 +2495,61 @@ if __name__ == '__main__':
                                 passing_item_id = -1
                                 cur_game_state = GAME_STATE_ACCESS_INV
                             else:
+                                #Consume your AP BEFORE using the ability - useful for abils like stim prick
+                                if using_ability_boolean == True:
+                                    # Consume AP:
+                                    inv_char.ability_points_cur -= passing_item_id.ability_point_cost
+
                                 #Use item:
                                 passing_item_id.use_item(chars_in_room_list[int_input])
 
-                                #Destroy item, if applicable; remove from this char's backpack:
-                                if passing_item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
-                                    del inv_char.inv_list[passing_item_index]
-                                else:
-                                    inv_char.inv_list[passing_item_index] = -1
+                                #Destroy item, return to inv screen:
+                                if using_ability_boolean == False:
+                                    #Destroy item, if applicable; remove from this char's backpack:
+                                    if passing_item_id.single_use_boolean:
+                                        if passing_item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
+                                            del inv_char.inv_list[passing_item_index]
+                                        else:
+                                            inv_char.inv_list[passing_item_index] = -1
 
-                                #Return to inventory game state:
-                                passing_item_index = -1
-                                passing_item_id = -1
-                                cur_game_state = GAME_STATE_ACCESS_INV
+                                    #Return to inventory game state:
+                                    passing_item_index = -1
+                                    passing_item_id = -1
+                                    cur_game_state = GAME_STATE_ACCESS_INV
+                                #Consume AP, move to next char or return to ASSIGN COMMAND:
+                                elif using_ability_boolean == True:
+
+                                    #If we're in game and abil_passes_turn == TRUE, advance char;
+                                    # otherwise if it == False, return to ASSIGN COMMAND
+                                    if combat_begun:
+                                        if passing_item_id.abil_passes_turn_boolean == True:
+                                            # Advance cur_char:
+                                            prev_cur_combat_char_index = combat_initiative_list.index(inv_char)
+
+                                            cur_combat_char, cur_combat_round, cur_game_state, combat_initiative_list = advance_combat_cur_char(
+                                                inv_char,
+                                                combat_initiative_list,
+                                                cur_combat_room_id,
+                                                cur_combat_round,
+                                                prev_cur_combat_char_index,
+                                                f"DEBUG: Moving away from USE ABILITY ON PC TARGET, game_state == {cur_game_state}, cur_char {cur_combat_char.name} .")
+
+                                            continue_str = input(
+                                                "Press enter to continue to the next combatant in the initiative queue.\n")
+                                            print("")
+                                        else:
+                                            #Return to assign combat command:
+                                            passing_item_index = -1
+                                            passing_item_id = -1
+                                            cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+                                    #If we're not in combat, return to our main game state:
+                                    else:
+                                        # Return to inventory game state:
+                                        passing_item_index = -1
+                                        passing_item_id = -1
+                                        cur_game_state = GAME_STATE_MAIN
                         else:
-                            invalid_pass_str = wrap_str("You must be occupying the same rank position as that character in order to pass them an item in combat.",TOTAL_LINE_W,False)
+                            invalid_pass_str = wrap_str("You must be occupying the same rank position as that character in order target them with this ability or pass them an item in combat.",TOTAL_LINE_W,False)
                             print(invalid_pass_str)
 
                     else:
