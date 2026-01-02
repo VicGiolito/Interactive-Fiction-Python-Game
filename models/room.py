@@ -8,7 +8,7 @@ import textwrap
 
 class Room:
 
-    def __init__(self ,location_type_enum ,room_type_enum ,grid_x ,grid_y):
+    def __init__(self ,location_type_enum,room_type_enum ,grid_x ,grid_y,location_grid):
 
         # Instance vars for each room:
         self.tech_count = 0
@@ -19,6 +19,7 @@ class Room:
         self.unpowered_room_desc = "Not defined"
         self.powered_room_desc = "Not defined"
         self.scavenged_once_boolean = False
+        self.already_explored_boolean = False
 
         # keyword_interaction_dict - used for room feature keywords associated with this room
         self.keyword_interaction_dict = {}
@@ -41,8 +42,10 @@ class Room:
         self.room_type_enum = room_type_enum
         self.location_type_enum = location_type_enum
         self.room_name = "Not defined"
+        self.location_grid = location_grid
 
         if self.location_type_enum == ENUM_LOCATION_NIFFY:
+
             if self.room_type_enum == ENUM_ROOM_NIFFY_CORRIDOR_BASIC_NORTH_SOUTH:
                 self.scavenge_resource_list[ENUM_SCAVENGE_RESOURCE_TECH_BASIC] = random.randint(0 ,3)
                 self.unpowered_room_desc = [ "This basic corridor only serves as a connection between two areas on the ship. The floor is metal grating and the walls are dirty panels of burnished steel. A few piles of refuse lay scattered about, evidence of the vessel's disuse." ]
@@ -116,6 +119,43 @@ class Room:
             else:
                 print \
                     (f"Constructor event for Room class: room_type_enum: {room_type_enum} not captured by if case for location_type_enum {location_type_enum}")
+
+    def print_room_directions(self):
+        print("The following directions are available to you:")
+
+        if len(self.directional_dict) > 0:
+            for key, value in self.directional_dict:
+                move_dir_x = 0
+                move_dir_y = 0
+                if key == "WEST":
+                    move_dir_x = -1
+                elif key == "NORTH":
+                    move_dir_y = -1
+                elif key == "EAST":
+                    move_dir_x = 1
+                elif key == "SOUTH":
+                    move_dir_y = 1
+                door_state_str = "undefined"
+                if value == ENUM_DOOR_UNLOCKED:
+                    door_state_str = "UNLOCKED DOOR"
+                elif value == ENUM_DOOR_JAMMED:
+                    door_state_str = "JAMMED DOOR"
+                elif value == ENUM_DOOR_DESTROYED:
+                    door_state_str = "DESTROYED DOOR"
+                elif value == ENUM_DOOR_LOCKED:
+                    door_state_str = "LOCKED DOOR"
+                elif value == ENUM_DOOR_OPEN_SPACE:
+                    door_state_str = "OPEN SPACE"
+
+                room_name_str = ""
+                if self.location_grid[self.grid_y+move_dir_y][self.grid_x+move_dir_x].already_explored_boolean:
+                    room_name_str = ": "+self.location_grid[self.grid_y+move_dir_y][self.grid_x+move_dir_x].room_name
+                    if isinstance(self.location_grid[self.grid_y+move_dir_y][self.grid_x+move_dir_x].enemies_in_room_list,list):
+                        if len(self.location_grid[self.grid_y+move_dir_y][self.grid_x+move_dir_x].enemies_in_room_list) > 0:
+                            room_name_str += ": (...Enemies lurk here...)"
+
+                print(f"{key}: {door_state_str}{room_name_str}")
+
 
     def print_room_desc(self):
         if not self.powered_status_boolean:
@@ -209,14 +249,14 @@ class Room:
 
         if isinstance(ar_to_use, list) and len(ar_to_use) > 0:
             if ar_to_use == self.pcs_in_room_list:
-                print("There are the following friendly characters in this room:")
+                print("There are the following playable characters in this room:")
                 for i in range(0,len(ar_to_use)):
                     print(f"{ar_to_use[i].name}")
                 print("")
             else:
                 team_str = "enemy"
                 if char_team_enum == ENUM_CHAR_TEAM_NEUTRAL:
-                    team_str = "neutral"
+                    team_str = "friendly"
                 # Count occurrences by name using Counter obj from imports
                 name_counts = Counter(char.name for char in ar_to_use)
                 # Print results

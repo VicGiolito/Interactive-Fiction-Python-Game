@@ -123,6 +123,7 @@ class Character:
 
         self.revived_dialogue_str_list = -1
         self.shield_bonus_count = 0 #For things like torvald's personal shield
+        self.already_fled_this_turn_boolean = False
 
         #region Define char stats....
         if char_type_enum == ENUM_CHARACTER_OGRE:

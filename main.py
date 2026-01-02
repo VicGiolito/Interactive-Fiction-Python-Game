@@ -26,6 +26,8 @@ if __name__ == '__main__':
     overwatch_loop_mode_enabled = False
     combat_begun = False #Reset to false in game_state GAME_STATE_INITIALIZING_NEW_TURN, only switched to true when iterating through pc_list and certain combat-related conditions met.
     using_ability_boolean = False
+    prep_combat_boolean = False
+    pc_fleeing_combat_boolean = False
 
     cur_char = -1
     cur_char_index = 0
@@ -68,7 +70,7 @@ if __name__ == '__main__':
 
     # region Manually build our location grid for the niffy location AND add debug enemies:
 
-    # location grid:
+    # location grid for niffy:
     location_grid_niffy = [[0 for _ in range(NIFFY_W)] for _ in range(NIFFY_H)]
     #Initialize each grid coordinate to -1
     for yy in range(0,len(location_grid_niffy)):
@@ -78,9 +80,9 @@ if __name__ == '__main__':
     origin_grid_y = len(location_grid_niffy) // 2
     origin_grid_x = len(location_grid_niffy[0]) // 2
 
-    location_grid_niffy[origin_grid_y][origin_grid_x] = Room(ENUM_LOCATION_NIFFY, ENUM_ROOM_NIFFY_STASIS_CHAMBER,origin_grid_x,origin_grid_y)
-    location_grid_niffy[origin_grid_y][origin_grid_x-1] = Room(ENUM_LOCATION_NIFFY,ENUM_ROOM_NIFFY_CORRIDOR_SR_WEST,origin_grid_x-1,origin_grid_y)
-    location_grid_niffy[origin_grid_y][origin_grid_x+1] = Room(ENUM_LOCATION_NIFFY,ENUM_ROOM_NIFFY_CORRIDOR_SR_EAST,origin_grid_x+1,origin_grid_y)
+    location_grid_niffy[origin_grid_y][origin_grid_x] = Room(ENUM_LOCATION_NIFFY, ENUM_ROOM_NIFFY_STASIS_CHAMBER,origin_grid_x,origin_grid_y,location_grid_niffy)
+    location_grid_niffy[origin_grid_y][origin_grid_x-1] = Room(ENUM_LOCATION_NIFFY,ENUM_ROOM_NIFFY_CORRIDOR_SR_WEST,origin_grid_x-1,origin_grid_y,location_grid_niffy)
+    location_grid_niffy[origin_grid_y][origin_grid_x+1] = Room(ENUM_LOCATION_NIFFY,ENUM_ROOM_NIFFY_CORRIDOR_SR_EAST,origin_grid_x+1,origin_grid_y,location_grid_niffy)
 
     #region Debug placeholder: Add some random enemies and neutral chars to the starting room:
         # char_type_enum, spawn_grid_x, spawn_grid_y, spawn_grid, char_team_enum
@@ -379,6 +381,23 @@ if __name__ == '__main__':
                             print("")
                             #Define cur_char:
                             cur_char = pc_char_list[0]
+                            #DEBUG ONLY: Add more chars and enemies:
+                            debug_features = True
+                            if debug_features:
+                                #West hall:
+                                pc_char_list.append(Character(ENUM_CHARACTER_OGRE,origin_grid_x-1,origin_grid_y,location_grid_niffy,ENUM_CHAR_TEAM_PC,True))
+                                enemy_char_list.append(
+                                    Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, origin_grid_x - 1, origin_grid_y, location_grid_niffy,
+                                              ENUM_CHAR_TEAM_ENEMY, True))
+                                #East hall:
+                                pc_char_list.append(
+                                    Character(ENUM_CHARACTER_CRIMINAL, origin_grid_x + 1, origin_grid_y, location_grid_niffy,
+                                              ENUM_CHAR_TEAM_PC, True))
+                                enemy_char_list.append(
+                                    Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, origin_grid_x + 1, origin_grid_y,
+                                              location_grid_niffy,
+                                              ENUM_CHAR_TEAM_ENEMY, True))
+
                             #change game state to initialize new turn, if applicable:
                             enter_combat_boolean = check_combat_start(pc_char_list)
                             if enter_combat_boolean:
@@ -451,22 +470,19 @@ if __name__ == '__main__':
                                 combat_initiative_list[i].cur_combat_rank = 0
                             else:
                                 combat_initiative_list[i].cur_combat_rank = ENUM_RANK_PC_FAR
-                        #Assign our global cur_combat_char for the first time:
-                        cur_combat_char = combat_initiative_list[0]
-                        #Change game state to GAME_STATE_COMBAT_EXECUTE_ACTION or GAME_STATE_COMBAT_ASSIGN_COMMAND,
-                        #depending on pc first or enemy first
-                        if cur_combat_char.char_team_enum == ENUM_CHAR_TEAM_PC:
-                            cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
-                        else:
-                            cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
-                        cur_combat_round = 1
-                        combat_begun = True
 
-                        print("You see the following enemies closing in on you:")
-                        print_combat_ranks(combat_rank_list)
-                        print("")
-                        any_key = input(f"Round {cur_combat_round} of combat has begun! Press enter to continue.")
-                        print("")
+                        #Assign our global cur_combat_char as the first pc char we find, as we'll be moving into prep_combat game_state
+                        for i in range(0,len(combat_initiative_list)):
+                            if combat_initiative_list[i].char_team_enum == ENUM_CHAR_TEAM_PC:
+                                cur_combat_char = combat_initiative_list[i]
+                                break
+
+                        #Send us to prep combat to give the player a chance to use abilities, change gear, use items, or flee:
+                        cur_game_state = GAME_STATE_PREP_COMBAT
+                        cur_combat_round = 0
+                        combat_begun = True
+                        prep_combat_boolean = True
+
                         break
 
             #If we completely get through this for loop without a battle being initiated, always set cur_char to first
@@ -478,8 +494,133 @@ if __name__ == '__main__':
 
         #endregion
 
-        #region GAME_STATE_COMBAT_ASSIGN_COMMAND GAME STATE
+        #region GAME_STATE_PREP_COMBAT
+        elif cur_game_state == GAME_STATE_PREP_COMBAT:
+            #Reset:
+            choose_ability_boolean = False
+            pc_fleeing_combat_boolean = False
 
+            #Print battlefield
+            prep_phase_summary = wrap_str(
+                f"Preparation phase of combat has begun. Here you can use abilities that don't target the enemy; change out your gear; or decide to flee. ",
+                TOTAL_LINE_W, False)
+            print(prep_phase_summary)
+            print("")
+            battlefield_summary_str = wrap_str("If you imagine a center-line separating your half of the room from the enemy's half at the start of the battle, this is what you see:",TOTAL_LINE_W,False)
+            print(battlefield_summary_str)
+            print_combat_ranks(combat_rank_list)
+            print("")
+            #print char status combat summation:
+            print(return_combat_char_summary_string(cur_combat_char,ammo_total))
+
+            #Build playable char list - these are the only chars we can access in prep combat phase:
+            playable_char_combat_list = []
+            for i in range(0,len(combat_initiative_list)):
+                if combat_initiative_list[i].char_team_enum == ENUM_CHAR_TEAM_PC:
+                    playable_char_combat_list.append(combat_initiative_list[i])
+
+            print("")
+            #Print char summary:
+            char_options_str = wrap_str(
+                f"Prepare for combat. You have the following commands available to you: 'S'TART COMBAT, 'ABIL'ITY, 'I'NV, '<' or '>' to iterate through the playable characters, or 'R'UN",TOTAL_LINE_W, False)
+            print(char_options_str)
+            input_str = input("Enter a combat command now.> ").upper().strip()
+            print("")
+
+            #Goto CHOOSE_DOOR_DIR game state:
+            if input_str == "R" or input_str == "RUN":
+                pc_fleeing_combat_boolean = True
+                prev_game_state = cur_game_state
+                cur_game_state = GAME_STATE_CHOOSE_DOOR_DIRECTION
+
+            #Iterate through chars:
+            elif input_str == "<" or input_str == ">":
+                if input_str == "<":
+                    move_dir = -1
+                elif input_str == ">":
+                    move_dir = 1
+
+                cur_char_index = playable_char_combat_list.index(cur_combat_char)
+
+                cur_char_index += move_dir
+
+                if cur_char_index < 0:
+                    cur_char_index = len(playable_char_combat_list)-1
+                elif cur_char_index >= len(playable_char_combat_list):
+                    cur_char_index = 0
+
+                cur_combat_char = playable_char_combat_list[cur_char_index]
+
+            #region Goto CHOOSE_ATTACK screen:
+            elif input_str == "ABIL" or input_str == "ABILITY" or input_str == "A":
+                choose_ability_boolean = True
+                print("DEBUG: ABIL option chosen, moving to GAME_STATE_COMBAT_CHOOSE_ATTACK now.")
+                cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
+            #endregion
+
+            #Goto access inv screen:
+            elif input_str == "I" or input_str == "INV" or input_str == "INVENTORY":
+                cur_game_state = GAME_STATE_ACCESS_INV
+
+            elif input_str == "S" or input_str == "START":
+                #Reset vars:
+                combat_begun = True
+                prep_combat_boolean = False
+                #Advance round:
+                cur_combat_round += 1
+                #Reorganize our initiative_list, as new, neutral characters could have been spawned:
+                combat_initiative_list = organize_initiative_list(combat_initiative_list)
+                #Assign cur_combat_char:
+                cur_combat_char = combat_initiative_list[0]
+                #Move to either execute action or assign command:
+                if (combat_initiative_list[0].char_team_enum == ENUM_CHAR_TEAM_ENEMY or
+                combat_initiative_list[0].char_team_enum == ENUM_CHAR_TEAM_NEUTRAL):
+                    cur_game_state = GAME_STATE_COMBAT_EXECUTE_ACTION
+                else:
+                    cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+
+            else:
+                print("That is an invalid command.")
+
+        #endregion
+
+        elif cur_game_state == GAME_STATE_CHOOSE_DOOR_DIRECTION:
+            if pc_fleeing_combat_boolean:
+                print("Where will you flee to?\n")
+                room_id = cur_combat_room_id
+            else:
+                print("Which door will you interact with?\n")
+                room_id = cur_room_inst_id
+
+            room_id.print_room_directions()
+
+            if pc_fleeing_combat_boolean:
+                instruction_str = wrap_str("Enter the first letter or the full word of the direction you want to flee to, or 'B'ACK to return to the previous screen. Note: you can only flee once per turn--so if you run into more enemies you will be forced to fight them!",TOTAL_LINE_W,False)
+                print(instruction_str)
+                input_str = input("Enter your choice now. >").upper.strip()
+                print("")
+                if (input_str == "W" or input_str == "WEST" or input_str == "E" or input_str == "N" or input_str == "NORTH"
+                or input_str == "S" or input_str == "SOUTH"):
+                    move_dir_x = 0
+                    move_dir_y = 0
+                    if input_str == "W" or input_str == "WEST":
+                        move_dir_x = -1
+                    elif input_str == "E" or input_str == "EAST":
+                        move_dir_x = 1
+                    elif input_str == "S" or input_str == "SOUTH":
+                        move_dir_y = 1
+                    elif input_str == "N" or input_str == "NORTH":
+                        move_dir_y = -1
+
+                    #Im working here
+
+                elif input_str == "B" or input_str == "BACK":
+                    if pc_fleeing_combat_boolean:
+                        cur_game_state = prev_game_state #Will be either PREP_COMBAT or ASSIGN_COMMAND game state
+                    else:
+                        cur_game_state = GAME_STATE_MAIN
+
+        #region GAME_STATE_COMBAT_ASSIGN_COMMAND GAME STATE
         elif cur_game_state == GAME_STATE_COMBAT_ASSIGN_COMMAND:
 
             if cur_combat_char.unconscious_boolean:
@@ -502,6 +643,7 @@ if __name__ == '__main__':
             pc_collapsed_from_dot = False
             using_ability_boolean = False
             combat_concluded_boolean = False
+            pc_fleeing_combat_boolean = False
 
             # Store in case the cur_char dies as a result of DOT damage:
             prev_cur_combat_char_index = combat_initiative_list.index(cur_combat_char)
@@ -602,30 +744,8 @@ if __name__ == '__main__':
                 print(battlefield_summary_str)
                 print_combat_ranks(combat_rank_list)
                 print("")
-                #Use vars to account for things like adrenal pen and other abilities, which boost stats in combat only - they don't permanently boost the actual stat.
-                total_char_spd = cur_combat_char.speed
-                total_char_acc = cur_combat_char.accuracy
-                total_char_armor = cur_combat_char.armor
-                total_char_evasion = cur_combat_char.evasion
-                if cur_combat_char.shield_bonus_count > 0:
-                    total_char_evasion += 2
-                    total_char_armor += 2
-                if cur_combat_char.hold_the_line_count > 0:
-                    total_char_evasion += 2
-                if cur_combat_char.adrenal_pen_count > 0:
-                    total_char_spd += 2
-                    total_char_acc += 2
-                status_effects_str = return_status_effects_str(cur_combat_char)
-                char_summary_str = wrap_str(f"You are {cur_combat_char.name}. "
-                                            f"You have {cur_combat_char.hp_cur}/{cur_combat_char.hp_max} hit points, "
-                                            f"{cur_combat_char.sanity_cur}/{cur_combat_char.sanity_max} sanity points, "
-                                            f"{cur_combat_char.ability_points_cur}/{cur_combat_char.ability_points_max} ability points, "
-                                            f"{total_char_armor} armor, "
-                                            f"{total_char_evasion} evasion, "
-                                            f"{total_char_acc} accuracy, "
-                                            f"and {total_char_spd} speed. "
-                                            f"The party has {ammo_total} ammunition between them. {status_effects_str}",TOTAL_LINE_W,False)
-                print(char_summary_str)
+
+                print(return_combat_char_summary_string(cur_combat_char,ammo_total))
 
                 overwatch_str = ""
                 suppress_str = ""
@@ -638,11 +758,13 @@ if __name__ == '__main__':
                 print(char_options_str)
                 input_str = input("Enter a combat command now.> ").upper().strip()
                 print("")
+
                 #region Choose ability:
                 if input_str == "ABIL" or input_str == "ABILITY":
                     cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
                     choose_ability_boolean = True
                 #endregion
+
                 #region FIGHT logic
                 elif input_str == "F" or input_str == "FIGHT":
                     cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
@@ -751,6 +873,13 @@ if __name__ == '__main__':
                     print("")
                 #endregion
 
+                #region 'RUN' logic:
+                elif input_str == "R" or input_str == "RUN":
+                    pc_fleeing_combat_boolean = True
+                    prev_game_state = cur_game_state
+                    cur_game_state = GAME_STATE_CHOOSE_DOOR_DIRECTION
+                #endregion
+
                 else:
                     print("That is an invalid combat option, try again.")
 
@@ -806,7 +935,10 @@ if __name__ == '__main__':
                     "Enter the corresponding number associated with the ability, or enter 'B' or 'BACKUP' to enter a new combat command.> ").upper().strip()
             print("")
             if input_str == "B" or input_str == "BACKUP":
-                cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+                if not prep_combat_boolean:
+                    cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+                elif prep_combat_boolean == True:
+                    cur_game_state = GAME_STATE_PREP_COMBAT
             else:
                 try:
                     input_int = int(input_str)
@@ -853,7 +985,10 @@ if __name__ == '__main__':
                                                 cur_combat_char.ability_points_cur -= ar_to_use[input_int].ability_point_cost
 
                                                 #Return the to ASSIGN_COMMAND
-                                                if ar_to_use[input_int].abil_passes_turn_boolean == False:
+                                                if prep_combat_boolean == True:
+                                                    cur_game_state = GAME_STATE_PREP_COMBAT
+
+                                                elif ar_to_use[input_int].abil_passes_turn_boolean == False:
                                                     cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
 
                                                 #Call advance_cur_combat_char
@@ -878,8 +1013,11 @@ if __name__ == '__main__':
 
                                                 #We'll simply use this ability as a weapon item and move to GAME_STATE_COMBAT_TARGET_RANK:
                                                 if ar_to_use[input_int].use_requires_target_boolean == False:
-                                                    cur_combat_char.chosen_weapon = ar_to_use[input_int]
-                                                    cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+                                                    if prep_combat_boolean == False:
+                                                        cur_combat_char.chosen_weapon = ar_to_use[input_int]
+                                                        cur_game_state = GAME_STATE_COMBAT_TARGET_RANK
+                                                    else:
+                                                        print("Combat has not started, you cannot yet use that weapon or ability.\n")
 
                                                 #We'll move to USE_ITEM game state and attempt to use the item there:
                                                 elif ar_to_use[input_int].use_requires_target_boolean == True:
@@ -2079,12 +2217,16 @@ if __name__ == '__main__':
 
             #Show room description - no need for another line break after this method, the for-loop witin it provides the necessary spaces:
             if print_room_recap:
-                #Print room description, which includes keywords and what not:
+                #Print room description, which includes keywords:
                 cur_room_inst_id.print_room_desc()
 
                 #Print any items on the floor in this room (but only if scavenged_once_boolean == True)
                 if cur_room_inst_id.scavenged_once_boolean:
                     cur_room_inst_id.print_scavenge_list_item()
+
+                #Print available directions:
+                cur_room_inst_id.print_room_directions()
+                print("")
 
                 #Print any enemies in this room:
                 cur_room_inst_id.print_char_list(ENUM_CHAR_TEAM_ENEMY)
@@ -2204,11 +2346,17 @@ if __name__ == '__main__':
 
             elif input_str == "END" or input_str == "END TURN":
                 #Check for available action points and give a warning if characters still have unused action points:
+                #Necessary?
 
                 #Replenish all characters action points, reset 'new turn' type vars:
                 for i in range(0,len(pc_char_list)):
                     pc_char_list[i].cur_action_points = pc_char_list[i].max_action_points
                     pc_char_list[i].participated_in_new_turn_battle = False
+                    pc_char_list[i].already_fled_this_turn_boolean = False
+                    pc_char_list[i].ability_points_cur += 1
+                    #Cap:
+                    if  pc_char_list[i].ability_points_cur > pc_char_list[i].ability_points_max:
+                        pc_char_list[i].ability_points_cur = pc_char_list[i].ability_points_max
                 print("You've ended your turn, some time has passed.")
 
                 #Execute crisis events, if applicable:
@@ -2217,6 +2365,11 @@ if __name__ == '__main__':
 
                 #Implement enemy movement ai--moving around the map, including smashing locked or jammed doors,
                 #and/or indicating to the player that they are in the process of smashing a door:
+
+                #Check to see if we need to start combat:
+                enter_combat_boolean = check_combat_start(pc_char_list)
+                if enter_combat_boolean:
+                    cur_game_state = GAME_STATE_INITIALIZING_NEW_TURN
 
             #endregion
 
@@ -2306,10 +2459,12 @@ if __name__ == '__main__':
             item_index = -1
 
             if inv_input_str == "B" or inv_input_str == "BACK":
-                if not combat_begun:
+                if prep_combat_boolean:
+                    cur_game_state = GAME_STATE_PREP_COMBAT
+                elif not combat_begun:
                     cur_game_state = GAME_STATE_MAIN
                     print_room_recap = True
-                else:
+                elif combat_begun:
                     cur_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
 
             elif inv_input_str.startswith("L"):
@@ -2366,12 +2521,11 @@ if __name__ == '__main__':
                         #'L'ook at item:
                         elif show_item_desc_boolean:
                             selected_item.print_item_desc()
+
                         #'D'rop item:
                         elif drop_item_boolean:
-                            if not combat_begun:
-                                inv_char.drop_item_into_room(selected_item,item_index, cur_grid_to_use[inv_char.cur_grid_y][inv_char.cur_grid_x])
-                            else:
-                                cur_combat_char.drop_item_into_room(selected_item,item_index,cur_combat_room_id)
+                            inv_char.drop_item_into_room(selected_item,item_index, inv_char.cur_grid[inv_char.cur_grid_y][inv_char.cur_grid_x])
+
                         # Use item:
                         elif selected_item.usable_boolean == True:
                             if not combat_begun:
@@ -2388,7 +2542,7 @@ if __name__ == '__main__':
                             if selected_item.equippable_boolean == True:
                                 #Determine if we need to unequip, equip, swap, or use item:
                                 if item_index <= ENUM_EQUIP_SLOT_LH:
-                                    if not combat_begun:
+                                    if not combat_begun or prep_combat_boolean:
                                         #Unequip item, if it's already equipped as one of the equipment slots:
                                         inv_char.unequip_item(selected_item,item_index)
                                     else:
@@ -2399,7 +2553,7 @@ if __name__ == '__main__':
                                             print("You don't have time to unequip body or accessory slots during combat.")
                                 #Equip an item from one of the backpack slots:
                                 elif item_index > ENUM_EQUIP_SLOT_LH:
-                                    if not combat_begun:
+                                    if not combat_begun or prep_combat_boolean:
                                         if inv_char.check_valid_item_equip(selected_item):
                                             inv_char.equip_item(selected_item,item_index)
                                     else:
@@ -2427,12 +2581,13 @@ if __name__ == '__main__':
 
         #endregion
 
-        #region Passing item game state
+        #region Passing item game state or use_target_item game state
+
         elif cur_game_state == GAME_STATE_PASSING_ITEM or cur_game_state == GAME_STATE_USE_TARGET_ITEM:
             if cur_game_state == GAME_STATE_PASSING_ITEM:
-                print("\nPass item to which character in the same room?\n")
+                print("Pass item to which character in the same room?\n")
             else:
-                print("\nWhich character in the same room or rank should you use the item or ability on?\n")
+                print("Which character in the same room or rank should you use the item or ability on?\n")
             list_to_target = -1
             chars_in_room_list = []
             if combat_begun:

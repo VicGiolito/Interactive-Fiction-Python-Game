@@ -20,7 +20,38 @@ from models.room import Room
 
 #region Define help funcs and essential funcs
 
-#Functions similarly to our INIT_COMBAT game state, we just check our pc_char_list,
+def return_combat_char_summary_string(cur_combat_char,ammo_total):
+    # Use vars to account for things like adrenal pen and other abilities, which boost stats in combat only - they don't permanently boost the actual stat.
+    total_char_spd = cur_combat_char.speed
+    total_char_acc = cur_combat_char.accuracy
+    total_char_armor = cur_combat_char.armor
+    total_char_evasion = cur_combat_char.evasion
+    if cur_combat_char.shield_bonus_count > 0:
+        total_char_evasion += 2
+        total_char_armor += 2
+    if cur_combat_char.hold_the_line_count > 0:
+        total_char_evasion += 2
+    if cur_combat_char.adrenal_pen_count > 0:
+        total_char_spd += 2
+        total_char_acc += 2
+    status_effects_str = return_status_effects_str(cur_combat_char)
+    char_summary_str = wrap_str(f"You are {cur_combat_char.name}. "
+                                f"You have {cur_combat_char.hp_cur}/{cur_combat_char.hp_max} hit points, "
+                                f"{cur_combat_char.sanity_cur}/{cur_combat_char.sanity_max} sanity points, "
+                                f"{cur_combat_char.ability_points_cur}/{cur_combat_char.ability_points_max} ability points, "
+                                f"{total_char_armor} armor, "
+                                f"{total_char_evasion} evasion, "
+                                f"{total_char_acc} accuracy, "
+                                f"and {total_char_spd} speed. "
+                                f"The party has {ammo_total} ammunition between them. {status_effects_str}",
+                                TOTAL_LINE_W, False)
+
+    return char_summary_str
+
+
+
+#Functions similarly to our INIT_COMBAT game state, we just check our pc_char_list, and if there's an enemy in that
+#room, we return true
 def check_combat_start(pc_char_list):
 
     for i in range(0, len(pc_char_list)):
