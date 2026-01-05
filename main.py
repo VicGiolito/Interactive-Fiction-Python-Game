@@ -12,8 +12,34 @@ import textwrap
 import keyboard
 import string
 from collections import Counter
+import pygame
+import sys
 
 if __name__ == '__main__':
+
+    #region pygame setup:
+
+    GAME_WIDTH = 320
+    GAME_HEIGHT = 180
+
+    #Initialize all of pygame's modules:
+    pygame.init()
+
+    #Create surface for smaller, pixel art size:
+    game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
+
+    # Create fullscreen window at user's native resolution
+    debug_full_screen = True
+    if debug_full_screen:
+        screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    else:
+        screen = pygame.display.set_mode((1920, 1080))
+
+    # Get the actual screen size
+    screen_width, screen_height = screen.get_size()
+
+    #Set 'clock': this will limit FPS
+    clock = pygame.time.Clock()
 
     #region Define global vars:
 
@@ -62,13 +88,13 @@ if __name__ == '__main__':
     combat_rank_list = -1
     overwatch_attacker_list = -1
 
-    #endregion
-
     pc_char_list = [] #Used for the player's final chosen party
     enemy_char_list = []
     neutral_char_list = []
     total_chars_stats_list = [] #Used simply to display char stats
     total_chars_bio_list = [] #Used to display a char's biography
+
+    #endregion
 
     # region Manually build our location grid for the niffy location AND add debug enemies:
 
@@ -315,6 +341,33 @@ if __name__ == '__main__':
     #endregion
 
     while game_end == False:
+
+        #Listen for pygame events:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_end = True
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    game_end = True
+                    pygame.quit()
+                    sys.exit()
+
+        # Draw everything to your smaller, pixel-art game_surface:
+        game_surface.fill((0, 0, 0))  # Clear screen to black
+
+        #region ALL DRAWING CODE:
+
+        # - Draw backgrounds
+        # - Draw sprites
+        # - Draw UI
+
+        #endregion
+
+        # Scale surface up to fullscreen - must be called AFTER all of our draw code:
+        scaled_surface = pygame.transform.scale(game_surface, (screen_width, screen_height))
+        screen.blit(scaled_surface, (0, 0))
 
         #region Choose chars game state:
 
@@ -3040,3 +3093,12 @@ if __name__ == '__main__':
 
             #endregion
         #endregion
+
+        #Second to last thing in main loop:
+        pygame.display.flip()
+
+        #Very last thing in main loop:
+        clock.tick(60)  # Limit to 60 frames per second (FPS)
+
+    #If we've exited our main game loop, use pygame.quit() to remove all of the pygame modules from memory:
+    pygame.quit()
