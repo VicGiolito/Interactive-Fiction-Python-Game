@@ -381,8 +381,8 @@ class Character:
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_CONCUSSION_GRENADE_LAUNCHER)
             self.equip_item(item_to_equip, -1,True)
-            #item_to_equip = Item(ENUM_ITEM_TOXIC_GRENADE_LAUNCHER)
-            #self.add_item_to_backpack(item_to_equip, True)
+            item_to_equip = Item(ENUM_ITEM_SUB_MACHINE_GUN)
+            self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_LASER_PISTOL)
             self.add_item_to_backpack(item_to_equip, True)
             item_to_equip = Item(ENUM_ITEM_REVOLVER)
@@ -599,7 +599,7 @@ class Character:
             self.intelligence = 2
             self.wisdom = 1
             self.dexterity = 7
-            self.speed = 8
+            self.speed = 5
 
             self.evasion = ENUM_AVERAGE_EVASION_SCORE+1 #Better than average at evading
 
@@ -976,8 +976,6 @@ class Character:
                 self.status_res_list.append(self.res_fire)
             elif i == ENUM_STATUS_EFFECT_INFECT:
                 self.status_res_list.append(self.res_infect)
-            elif i == ENUM_STATUS_EFFECT_COMPROMISE:
-                self.status_res_list.append(self.res_compromised)
             elif i == ENUM_STATUS_EFFECT_POISON:
                 self.status_res_list.append(self.res_poison)
             elif i == ENUM_STATUS_EFFECT_BLEED:
@@ -1129,10 +1127,13 @@ class Character:
         if not starting_equip_boolean:
             print(f"{self.name} has picked up the {item_id_to_add.item_name}")
 
-    def drop_item_into_room(self ,item_id ,item_index ,room_inst_id):
+    def drop_item_into_room(self ,item_id ,item_index ,room_inst_id, print_drop = True,print_change_stats = True):
         # Change stats:
         if item_id.changes_stats_boolean == True:
-            self.change_char_stats(item_id ,False, False)
+            if print_change_stats:
+                self.change_char_stats(item_id ,False, False)
+            else:
+                self.change_char_stats(item_id, False, True)
         if item_index < ENUM_EQUIP_SLOT_TOTAL_SLOTS:
             self.inv_list[item_index] = -1 # Change corresponding slot to 'empty'
         elif item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
@@ -1146,18 +1147,13 @@ class Character:
                 room_inst_id.scavenge_resource_list.append(-1)
             room_inst_id.scavenge_resource_list.append(item_id)
         else:
-            # Extend the length of the room_inst_id.scavenge_resource_list if necessary, adding -1 to non-existant indices:
-            """
-            if len(room_inst_id.scavenge_resource_list) <= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
-                # The '*' here is an overloaded operand and doesn't actually represent multiplcation; it represents 'copying' a list element that many times, in this case: [-1] is copied into the list a certain amount of times until the length is exactly where we want it
-                room_inst_id.scavenge_resource_list.extend([-1] * (ENUM_EQUIP_SLOT_TOTAL_SLOTS - len(room_inst_id.scavenge_resource_list)))
-            """
-            # Now append item_id (which will be at either index ENUM_EQUIP_SLOT_TOTAL_SLOTS if we extended our list match, or beyond that at the end of the list, if the len of the list was already > ENUM_EQUIP_SLOT_TOTAL_SLOTS)
+            #Resource indices in the scavenge_resource_list should already exist with integer values, just add item to the end.
             room_inst_id.scavenge_resource_list.append(item_id)
 
-        print \
-            (f"{self.name} has dropped the {item_id.item_name}. It can be retrieved again from this room using the 'SCAVENGE' command.")
-        print("")
+        if print_drop:
+            print \
+                (f"{self.name} has dropped the {item_id.item_name}. It can be retrieved again from this room using the 'SCAVENGE' command, or by using 'get [item name]' or 'g [item name]'.")
+            print("")
 
     def change_char_stats(self ,item_id ,equipping_boolean ,starting_equip_boolean):
         # If equipping_boolean == false, we're ADDING the effect of the item stat

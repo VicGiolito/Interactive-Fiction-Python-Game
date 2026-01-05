@@ -89,8 +89,8 @@ class Item:
             self.aoe_count = 3
             self.can_overwatch_boolean = True
             self.bleed_chance = 25
-            self.can_suppress_boolean = True
-            self.item_desc = "Your standard issue military grade shotgun most commonly used by security personnel. "
+            self.item_desc = "Your standard issue military grade shotgun most commonly used by security personnel."
+            self.can_overwatch_boolean = True
         elif self.item_enum == ENUM_ITEM_REVOLVER:
             self.dmg_min = 1
             self.dmg_max = 4
@@ -101,7 +101,6 @@ class Item:
             self.item_dmg_str = "shot"
             self.can_overwatch_boolean = True
             self.bleed_chance = 10
-            self.can_suppress_boolean = True
         elif self.item_enum == ENUM_ITEM_LASER_PISTOL:
             self.dmg_min = 2
             self.dmg_max = 5
@@ -113,7 +112,6 @@ class Item:
             self.item_dmg_str = "burned"
             self.can_overwatch_boolean = True
             self.burn_chance = 10
-            self.can_suppress_boolean = True
         elif self.item_enum == ENUM_ITEM_GRENADE:
             self.dmg_min = 8
             self.dmg_max = 12
@@ -131,14 +129,14 @@ class Item:
             self.dmg_max = 6
             self.item_name = "FLAMETHROWER"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
-            self.max_range = 1
+            self.max_range = 0
             self.item_verb = "spews fire with the"
             self.item_dmg_str = "burned"
             self.aoe_count = -1
-            self.burn_chance = 85
+            self.burn_chance = 75
             self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_HAND_FLAMER: #Torvald ability
-            self.dmg_min = 3
+            self.dmg_min = 2
             self.dmg_max = 5
             self.item_name = "PALM FLAMER"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
@@ -146,7 +144,7 @@ class Item:
             self.item_verb = "spews fire with the"
             self.item_dmg_str = "burned"
             self.aoe_count = -1
-            self.burn_chance = 85
+            self.burn_chance = 75
             self.always_checks_status_effect_boolean = True
             self.ability_point_cost = 3
             self.ability_cost_str = f"Spend {self.ability_point_cost} AP"
@@ -334,20 +332,18 @@ class Item:
             self.non_attack_ability_boolean = True
             self.abil_passes_turn_boolean = True
             self.requires_ammo_boolean = False
-
         elif self.item_enum == ENUM_ITEM_ROCKET_LAUNCHER:
             self.dmg_min = 10
             self.dmg_max = 15
             self.single_use_boolean = True
             self.item_name = "ROCKET LAUNCHER"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
-            self.max_range = 6
+            self.max_range = 4
             self.item_verb = "fires the"
             self.item_dmg_str = "exploded"
             self.aoe_count = 8
-            self.can_overwatch_boolean = True
-            self.bleed_chance = 25
-            self.burn_chance = 50
+            self.bleed_chance = 75
+            self.burn_chance = 75 #DEBUG
         elif self.item_enum == ENUM_ITEM_LEAD_PIPE:
             self.dmg_min = 1
             self.dmg_max = 4
@@ -467,9 +463,9 @@ class Item:
             self.max_range = 4
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
-            self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
             self.bleed_chance = 25
+            self.can_overwatch_boolean = True
         elif self.item_enum == ENUM_ITEM_LIGHT_MG: #Light sentry gun weapon.
             self.dmg_min = 3
             self.dmg_max = 6
@@ -478,7 +474,6 @@ class Item:
             self.max_range = 4
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
-            self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
             self.bleed_chance = 25
             self.suppress_chance = 33
@@ -502,8 +497,8 @@ class Item:
             self.item_verb = "fires a"
             self.item_dmg_str = "shot"
         elif self.item_enum == ENUM_ITEM_ACID_SPIT:
-            self.dmg_min = 5
-            self.dmg_max = 10
+            self.dmg_min = 4
+            self.dmg_max = 8
             self.item_name = "ACID BILE"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 2
@@ -515,8 +510,8 @@ class Item:
             self.infection_chance = 10
             self.always_checks_status_effect_boolean = True
         elif self.item_enum == ENUM_ITEM_ACID_CLOUD:
-            self.dmg_min = 2
-            self.dmg_max = 4
+            self.dmg_min = 1
+            self.dmg_max = 3
             self.item_name = "ACID CLOUD"
             self.equip_slot_list = [[ENUM_EQUIP_SLOT_RH,ENUM_EQUIP_SLOT_LH]] #Indicates two-handed weapon
             self.max_range = 2
@@ -536,7 +531,6 @@ class Item:
             self.item_verb = "sprays"
             self.item_dmg_str = "melted"
             self.aoe_count = -1
-            self.can_suppress_boolean = True
             self.suppress_chance = 75
             self.always_checks_status_effect_boolean = True
             self.infection_chance = 10
@@ -549,7 +543,6 @@ class Item:
             self.item_verb = "spits a massive"
             self.item_dmg_str = "melted"
             self.aoe_count = -1
-            self.can_suppress_boolean = True
             self.infection_chance = 10
             self.poison_chance = 10
             self.stun_chance = 20
@@ -606,10 +599,10 @@ class Item:
             self.max_range = 3
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
-            self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
             self.aoe_count = 4
             self.bleed_chance = 25
+            self.suppress_chance = 50
         elif self.item_enum == ENUM_ITEM_MACHINE_PISTOL:
             self.dmg_min = 2
             self.dmg_max = 4
@@ -618,10 +611,10 @@ class Item:
             self.max_range = 2
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
-            self.can_suppress_boolean = True
             self.can_overwatch_boolean = True
             self.aoe_count = 3
             self.bleed_chance = 25
+            self.suppress_chance = 25
         elif self.item_enum == ENUM_ITEM_SNIPER_RIFLE:
             self.dmg_min = 8
             self.dmg_max = 12
@@ -632,7 +625,6 @@ class Item:
             self.item_verb = "fires the"
             self.item_dmg_str = "shot"
             self.can_overwatch_boolean = True
-            self.can_suppress_boolean = True #Debug var
             self.bleed_chance = 50
         elif self.item_enum == ENUM_ITEM_LASER_RIFLE:
             self.dmg_min = 6
@@ -645,7 +637,6 @@ class Item:
             self.item_verb = "fires the"
             self.item_dmg_str = "burned"
             self.can_overwatch_boolean = True
-            self.can_suppress_boolean = True
             self.burn_chance = 25
         elif self.item_enum == ENUM_ITEM_MEDKIT:
             self.single_use_boolean = True
@@ -827,8 +818,6 @@ class Item:
                 self.status_effect_list.append(self.burn_chance)
             elif i == ENUM_STATUS_EFFECT_INFECT:
                 self.status_effect_list.append(self.infection_chance)
-            elif i == ENUM_STATUS_EFFECT_COMPROMISE:
-                self.status_effect_list.append(self.compromised_chance)
             elif i == ENUM_STATUS_EFFECT_POISON:
                 self.status_effect_list.append(self.poison_chance)
             elif i == ENUM_STATUS_EFFECT_BLEED:

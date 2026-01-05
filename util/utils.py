@@ -20,6 +20,82 @@ from models.room import Room
 
 #region Define help funcs and essential funcs
 
+def return_first_alive_pc(pc_char_list):
+
+    if isinstance(pc_char_list,list):
+        if len(pc_char_list) > 0:
+            for i in range(0,len(pc_char_list)):
+                char_id = pc_char_list[i]
+                if char_id.unconscious_boolean == False and char_id.hp_cur > 0:
+                    return char_id
+
+    raise Exception("return_first_alive_pc: couldn't find a valid alive pc in our pc_char_list, and yet we called this function. Something went wrong or was poorly planned.")
+
+
+def drop_all_pc_inventory(pc_id,room_id_to_drop_into):
+
+    two_handed_wep_just_dropped = False
+
+    if isinstance(pc_id.inv_list,list):
+        if len(pc_id.inv_list) > 0:
+            for i in range(0,len(pc_id.inv_list)):
+                item_id = pc_id.inv_list[i]
+                if isinstance(item_id,Item):
+                    if two_handed_wep_just_dropped == False:
+                        pc_id.drop_item_into_room(item_id,i,room_id_to_drop_into,False,False)
+                    else:
+                        two_handed_wep_just_dropped = False
+                        continue
+                    #Check to set two_handed_wep_just_dropped var
+                    if check_two_handed_item(item_id) == True:
+                        two_handed_wep_just_dropped = True
+
+def spawn_combat_minion(spawner_id,combat_initiative_list,combat_rank_list,spawner_was_just_killed_boolean):
+    # Spawn a certain number of skittering larva:
+    for i in range(0, spawner_id.spawn_minion_count):
+        minion_inst = Character(
+            ENUM_CHARACTER_ENEMY_SKITTERING_LARVA,
+            spawner_id.cur_grid_x,
+            spawner_id.cur_grid_y,
+            spawner_id.cur_grid,
+            ENUM_CHAR_TEAM_ENEMY, True)
+        # Add to end of initiative_queue and to spawner's current rank in combat_rank_list
+        combat_initiative_list.append(minion_inst)
+
+        combat_rank_list[
+            spawner_id.cur_combat_rank].append(
+            minion_inst)
+
+        #Set spawned minion's rank:
+        minion_inst.cur_combat_rank = spawner_id.cur_combat_rank
+
+        # Print result:
+        if spawner_was_just_killed_boolean:
+            print(
+                f"While in its death throes, a {minion_inst.name} has just violently spawned from the {spawner_id.name}'s back!\n")
+        else:
+            print(f"A {minion_inst.name} has just violently spawned from the {spawner_id.name}'s back!\n")
+
+    spawner_id.spawn_minion_count = 0
+
+    return combat_initiative_list, combat_rank_list
+
+#Check if a weapon is two handed (true) or one handed (false); if it's neither, returns -1
+def check_two_handed_item(item_id):
+
+    if isinstance(item_id.equip_slot_list,list):
+        if len(item_id.equip_slot_list) > 0:
+            #Indicates two-handed weapon, which are a nested list contained RH and LH equip slot enums:
+            if isinstance(item_id.equip_slot_list[0], list):
+                return True
+            else:
+                #Indicates weapon can be equipped in either hand
+                if item_id.equip_slot_list[0] == ENUM_EQUIP_SLOT_LH or item_id.equip_slot_list[0] == ENUM_EQUIP_SLOT_RH:
+                    return False
+
+    return -1
+
+#removes ALL instances of Character from the corresponding room list:
 def remove_team_chars_from_room(room_id,team_enum):
 
     if team_enum == ENUM_CHAR_TEAM_NEUTRAL:
@@ -86,6 +162,7 @@ def execute_char_combat_flee(combat_initiative_list,combat_rank_list,cur_combat_
     elif fled_to_another_map_boolean:
         print(f"fled_to_another_map_boolean == TRUE -- THIS FEATURE HASN'T BEEN IMPLEMENTED YET.")
 
+#If a door is not locked or jammed, it's considered valid
 def return_valid_door_dir(room_id,dir_dict_key):
 
     if isinstance(room_id,Room):
@@ -127,8 +204,6 @@ def return_combat_char_summary_string(cur_combat_char,ammo_total):
 
     return char_summary_str
 
-
-
 #Functions similarly to our INIT_COMBAT game state, we just check our pc_char_list, and if there's an enemy in that
 #room, we return true
 def check_combat_start(pc_char_list):
@@ -152,7 +227,11 @@ def execute_non_attack_ability(item_id,casting_char_id,combat_initiative_list,co
     if abil_enum == ENUM_ITEM_PERSONAL_SHIELD_GENERATOR:
         casting_char_id.shield_bonus_count = 4
         casting_char_id.suppress_immune_boolean = True
-        print(f"{casting_char_id.name} has activated their {item_id.item_name}. They will receive +{ENUM_PERSONAL_SHIELD_BONUS} armor and +{ENUM_PERSONAL_SHIELD_BONUS} evasion for {casting_char_id.shield_bonus_count-1} turns.\n")
+        if casting_char_id.suppressed_count > 0:
+            casting_char_id.suppressed_count = 0
+        result_str = wrap_str(f"{casting_char_id.name} has activated their {item_id.item_name}. They have been cleared of suppression and have become suppression immune, and will also receive +{ENUM_PERSONAL_SHIELD_BONUS} armor and +{ENUM_PERSONAL_SHIELD_BONUS} evasion for {casting_char_id.shield_bonus_count-1} turns.\n",TOTAL_LINE_W,False)
+        print(result_str)
+        print("")
 
     elif abil_enum == ENUM_ITEM_HOLD_THE_LINE:
 
@@ -196,8 +275,7 @@ def execute_non_attack_ability(item_id,casting_char_id,combat_initiative_list,co
         # Print result:
         print(f"{casting_char_id.name} has just finished building a {minion_inst.name} at this position!\n")
 
-
-def return_item_stats_str(item_id,show_suppress_chance_boolean = False):
+def return_item_stats_str(item_id):
 
     # Display min-max damage, range, max_hits, and all status effects for lh or rh items;
     # or armor-evasion and other resistences/buffs/debuffs if body or accessory slot:
@@ -261,8 +339,7 @@ def return_item_stats_str(item_id,show_suppress_chance_boolean = False):
                 item_status_effects_str_list.append(f" POISON: {item_id.poison_chance}%")
             if item_id.stun_chance > 0:
                 item_status_effects_str_list.append(f" STUN: {item_id.stun_chance}%")
-            if show_suppress_chance_boolean:
-                if item_id.suppressed_count > 0:
+            if item_id.suppress_chance > 0:
                     item_status_effects_str_list.append(f" SUPPRESS: {item_id.suppress_chance}%")
 
             if len(item_status_effects_str_list) >= 1:
@@ -366,6 +443,7 @@ def spawn_minion(char_type_enum):
     pass
 
     #Only used for enemy ai - typically when a target is beyond their max_range
+
 def return_overwatch_rank(acting_char_id,combat_rank_list, char_max_range):
     # Define move_dir as: "which direction is the target rank to my current position?"
     if acting_char_id.cur_combat_rank > acting_char_id.targeted_rank:
@@ -462,7 +540,7 @@ def print_combat_initiative_list(combat_initiative_list,cur_char):
     for i in range(0,len(combat_initiative_list)):
         asterisk_str = ""
         if combat_initiative_list[i] == cur_char:
-            asterisk_str = " *"
+            asterisk_str = "*"
         unconscious_str = ""
         if combat_initiative_list[i].unconscious_boolean:
             plural_str = ""
@@ -470,24 +548,54 @@ def print_combat_initiative_list(combat_initiative_list,cur_char):
                 plural_str = "s"
             unconscious_str = f"-unconscious: {combat_initiative_list[i].unconscious_count-1} turn{plural_str} left-"
         if combat_initiative_list[i].char_team_enum != ENUM_CHAR_TEAM_ENEMY:
-            print(f"{i}.) {combat_initiative_list[i].name}. H.P.:{combat_initiative_list[i].hp_cur}/{combat_initiative_list[i].hp_max}. {unconscious_str} {asterisk_str}")
+            print(f"{i}.) {combat_initiative_list[i].name}. H.P.:{combat_initiative_list[i].hp_cur}/{combat_initiative_list[i].hp_max}. {unconscious_str}{return_status_effects_str(combat_initiative_list[i])}{asterisk_str}")
         else:
             print(f"{i}.) {combat_initiative_list[i].name}")
 
-def apply_status_effects(char_id,item_id):
+def return_status_effect_enum_str(status_effect_enum):
 
+    status_effect_enum_str = "Not defined"
+
+    if status_effect_enum == ENUM_STATUS_EFFECT_POISON:
+        status_effect_enum_str = "POISONED"
+    elif status_effect_enum == ENUM_STATUS_EFFECT_INFECT:
+        status_effect_enum_str = "INFECTED"
+    elif status_effect_enum == ENUM_STATUS_EFFECT_BLEED:
+        status_effect_enum_str = "BLEED"
+    elif status_effect_enum == ENUM_STATUS_EFFECT_STUN:
+        status_effect_enum_str = "STUN"
+    elif status_effect_enum == ENUM_STATUS_EFFECT_FIRE:
+        status_effect_enum_str = "FIRE"
+    elif status_effect_enum == ENUM_STATUS_EFFECT_SUPPRESSED:
+        status_effect_enum_str = "SUPPRESS"
+
+    return status_effect_enum_str
+
+
+def apply_status_effects(char_id,item_id):
+    #print(f"DEBUG: ENTERING FUCKING APPLY_STATUS_EFFECTS: CHAR_id == {char_id.name} for item_id: {item_id.item_name}")
     #Because char_id.status_res_list and item_id.status_effect_list match, we can iterate through them both simultaneously:
     for i in range(0,len(item_id.status_effect_list)):
 
-        status_effect_str = ""
+        status_chance = item_id.status_effect_list[i]
+        status_resistence = char_id.status_res_list[i]
+        status_effect_str = return_status_effect_enum_str(i)
 
-        if item_id.status_effect_list[i] > 0 and char_id.status_res_list[i] < 100:
-            status_chance = item_id.status_effect_list[i] - char_id.status_res_list[i]
-            if status_chance > 0:
+        #print(
+            #f"DEBUG: attacker's item was: {item_id.item_name} against defender: {char_id.name}. FOR STATUS EFFECT {status_effect_str}, status_chance == {status_chance}, status_resistence == {status_resistence}")
+
+        if item_id.status_effect_list[i] > 0:
+
+            total_status_chance = status_chance - status_resistence
+
+            if total_status_chance > 0:
+
                 ran_val = random.randint(1,100)
+
                 #print(
-                    #f"DEBUG: apply_status_effects: attacker's item was: {item_id.item_name} with status effect enum: {i}, status_chance: {status_chance} and ran_val = {ran_val}.")
-                if ran_val <= status_chance:
+                    #f"DEBUG: apply_status_effects: their total_status_chance: {total_status_chance} and ran_val = {ran_val}.")
+
+                if ran_val <= total_status_chance:
                     #Define status_effect_str, as this status was applied:
                     if i == ENUM_STATUS_EFFECT_POISON:
                         status_effect_str = "POISONED"
@@ -512,7 +620,7 @@ def apply_status_effects(char_id,item_id):
                             continue
                     elif i == ENUM_STATUS_EFFECT_FIRE:
                         status_effect_str = "BURNING"
-                        char_id.burning_count = 2 #Can't stack
+                        char_id.burning_count = 3 #Can't stack
                     elif i == ENUM_STATUS_EFFECT_SUPPRESSED:
                         if char_id.suppress_immune_boolean == False:
                             status_effect_str = "SUPPRESSED (can't move, -2 evasion, -2 speed)"
@@ -521,8 +629,6 @@ def apply_status_effects(char_id,item_id):
                             continue
 
                     print(f"{char_id.name} is {status_effect_str}!\n")
-
-
 
 def resolve_dot_effects(char_id):
 
@@ -622,7 +728,7 @@ def resolve_dot_effects(char_id):
     if char_id.hold_the_line_count > 0:
         char_id.hold_the_line_count -= 1
         if char_id.hold_the_line_count <= 0:
-            result_str = wrap_str(f"{char_id.name}'s is no longer affected by the 'HOLD THE LINE' bonus (-2 evasion).\n",TOTAL_LINE_W,False)
+            result_str = wrap_str(f"{char_id.name}'s is no longer affected by the 'smoke screen' bonus (-{ENUM_HOLD_THE_LINE_EVADE_BONUS} evasion).\n",TOTAL_LINE_W,False)
             print(result_str)
 
     if char_id.shield_bonus_count > 0:
@@ -677,17 +783,17 @@ def resolve_dot_effects(char_id):
     if char_id.unconscious_boolean == False and char_id.hp_cur <= 0:
         new_combat_char_killed_boolean = True
         char_id.unconscious_boolean = True
-        char_id.unconscious_count = 3
+        char_id.unconscious_count = ENUM_BASE_UNCONSCIOUS_COUNT
         dot_result_str = "has collapsed!"
     elif char_id.unconscious_boolean and char_id.unconscious_count <= 0:
         new_combat_char_killed_boolean = True
         char_id.completely_dead_boolean = True
         dot_result_str = "has gasped their last breath!"
     elif mention_stun_recovery and char_id.hp_cur > 0:
-        print(f"**{char_id.name} is no longer stunned!**")
+        print(f"**{char_id.name} is no longer stunned!**\n")
 
     if new_combat_char_killed_boolean:
-        print(f"**{char_id.name} {dot_result_str}**")
+        print(f"**{char_id.name} {dot_result_str}**\n")
 
     return new_combat_char_killed_boolean
 
@@ -763,6 +869,7 @@ def advance_or_withdraw_char(move_dir,combat_rank_list,cur_combat_char):
 
     #Simply returns true if either the ENUM_EQUIP_SLOT_RH or ENUM_EQUIP_SLOT_LH are found in equip_slot_list
 
+#Simply checks to see if there is an item in any position in the char's equip_slot_list that can be equipped in the rh or lh
 def check_equip_slot_list_for_rh_or_lh(equip_slot_list):
     for i in range(0,len(equip_slot_list)):
         if isinstance(equip_slot_list[i],list):

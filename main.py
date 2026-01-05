@@ -101,69 +101,69 @@ if __name__ == '__main__':
         ammo_total += 55
 
         #Neutral scientist
-        for i in range(1,1):
+        for i in range(0,0):
             neutral_char_list.append(Character(ENUM_CHARACTER_NEUTRAL_INFECTED_SCIENTIST,origin_grid_x,origin_grid_y,location_grid_niffy,
                                                ENUM_CHAR_TEAM_NEUTRAL,True))
 
         #Chittering lurker:
-        for i in range(0, random.randint(4, 4)): #1,4
+        for i in range(0, random.randint(0, 0)): #1,4
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_WEBBED_LURKER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Spined Spitter
-        for i in range(0, random.randint(12, 12)): #1,3
+        for i in range(0, random.randint(0, 0)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_SPINED_SPITTER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Sodden Shambler
-        for i in range(0, random.randint(8, 8)): #1,3
+        for i in range(0, random.randint(0, 0)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_SODDEN_SHAMBLER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Lumbering mauler
-        for i in range(0, random.randint(16, 16)): #1,3
+        for i in range(0, random.randint(0, 0)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_LUMBERING_MAULER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         #Skittering Larva
-        for i in range(0, random.randint(24, 24)): #1,3
+        for i in range(0, random.randint(1, 1)): #1,3
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_ENEMY,True))
 
         # Flamer droid:
-        for i in range(0, random.randint(3, 3)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_FUMIGATING_FLAMER, origin_grid_x, origin_grid_y, location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
         # Scattershot droid:
-        for i in range(0, random.randint(4, 4)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_SPINNING_SCATTERSHOT, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
         # Whipstich sentinel droid:
-        for i in range(0, random.randint(3, 3)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_WHIPSTICH_SENTINEL, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
         # Jittering buzzsaw droid:
-        for i in range(0, random.randint(3, 3)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_JITTERING_BUZZSAW, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
                           ENUM_CHAR_TEAM_NEUTRAL, True))
 
         # Light sentry drone:
-        for i in range(0, random.randint(3, 3)):
+        for i in range(0, random.randint(0, 0)):
             enemy_char_list.append(
                 Character(ENUM_CHARACTER_NEUTRAL_LIGHT_SENTRY_DRONE, origin_grid_x, origin_grid_y,
                           location_grid_niffy,
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
         # Transmogrified Soldier - overwatch type:
         wep_loadout_num = 0
-        for i in range(9,9): #0,9
+        for i in range(0,0): #0,9
             if i != 0 and i % 3 == 0:
                 wep_loadout_num += 1
             enemy_char_list.append(
@@ -383,7 +383,7 @@ if __name__ == '__main__':
                         pc_char_list.append(Character(int_char,origin_grid_x,origin_grid_y,location_grid_niffy,ENUM_CHAR_TEAM_PC, True)) #instantiate char
                         print(f"You have added {pc_char_list[len(pc_char_list)-1].name} to the party.")
                         print("")
-                        if len(pc_char_list) == 7:
+                        if len(pc_char_list) == 3:
                             print("... Three silhouettes shamble from the stasis pods in the light of the bloody gloaming, the room quaking all around them...")
                             print("")
                             print("Through bleary eyes, you find yourself in the middle of a chaotic scene:")
@@ -420,6 +420,8 @@ if __name__ == '__main__':
 
                             if enter_combat_boolean:
                                 cur_game_state = GAME_STATE_INITIALIZING_NEW_TURN
+                            else:
+                                cur_game_state = GAME_STATE_MAIN
 
         #endregion for game_state == choose_chars
 
@@ -512,7 +514,9 @@ if __name__ == '__main__':
             #If we completely get through this for loop without a battle being initiated, always set cur_char to first
             #pc_inst in pc_char_list, then change game state:
             if combat_begun == False:
-                cur_char = pc_char_list[0]
+                #Assign cur char as the first alive and conscious we find in our pc_list:
+                cur_char = return_first_alive_pc(pc_char_list)
+
                 prev_game_state = GAME_STATE_MAIN #We'll use this prev_game_state to return to either here or the main game state after combat is concluded
                 cur_game_state = GAME_STATE_MAIN
 
@@ -727,7 +731,6 @@ if __name__ == '__main__':
                                         print(
                                             "The battle is over! The enemies in this room cavort and slaver in the wake of their victory...\n")
                                         if len(pc_char_list) <= 0:
-                                            print()
                                             print(
                                                 "Every playable character is dead--you have lost! Hopefully you have learned from your experiences...")
                                             game_end = True
@@ -827,6 +830,10 @@ if __name__ == '__main__':
                         # Destroy the cur_combat_char pc by removing them from all applicable lists:
                         #print(f"Debug: before entering destroy_combatant_inst: the cur_combat_char's index in combat_initiative_list is : {combat_initiative_list.index(cur_combat_char)}.")
 
+                        #Drop their gear; while it may seem extraneous to check their team, the game is always growing so its not bad practice:
+                        if cur_combat_char.char_team_enum == ENUM_CHAR_TEAM_PC:
+                            drop_all_pc_inventory(cur_combat_char,cur_combat_room_id)
+
                         combat_rank_list, combat_initiative_list, pc_char_list, enemy_char_list, neutral_char_list = destroy_combatant_inst(
                             combat_rank_list,
                             combat_initiative_list,
@@ -855,7 +862,6 @@ if __name__ == '__main__':
                                 print(
                                     "The battle is over! The enemies in this room slaver and cavort in the wake of their victory...\n")
                                 if len(pc_char_list) <= 0:
-                                    print()
                                     print("Every playable character is dead--you have lost! Hopefully you have learned from your experiences...")
                                     game_end = True
                                 else:
@@ -900,12 +906,11 @@ if __name__ == '__main__':
                 #Reset vars for GAME_STATE_COMBAT_CHOOSE_ATTACK game state:
                 choose_weapon_boolean = False
                 choose_ability_boolean = False
-                attempting_suppress_boolean = False  # only used for choose weapon logic
                 attempting_overwatch_boolean = False # only used for choose weapon logic
+                attempting_suppress_boolean = False #Defunct
 
                 #Check overwatch and suppress availability:
                 overwatch_avail_boolean = return_overwatch_or_suppress_capable(cur_combat_char,True)
-                suppress_avail_boolean = return_overwatch_or_suppress_capable(cur_combat_char, False)
 
                 battlefield_summary_str = wrap_str(f"Round {cur_combat_round} of the battle is underway. If you imagine a center-line separating your half of the room from the enemy's half at the start of the battle, this is what you see:",TOTAL_LINE_W,False)
                 print(battlefield_summary_str)
@@ -918,8 +923,6 @@ if __name__ == '__main__':
                 suppress_str = ""
                 if overwatch_avail_boolean:
                     overwatch_str = ", 'O'VERWATCH"
-                if suppress_avail_boolean:
-                    suppress_str = ", 'S'UPPRESS"
 
                 char_options_str = wrap_str(f"You have the following commands available to you: 'F'IGHT, 'A'DVANCE, 'W'ITHDRAW, 'I'NV, 'D'ODGE, 'R'UN, 'ABIL'ITY', 'V'IEW TURN ORDER{overwatch_str}{suppress_str}",TOTAL_LINE_W,False)
                 print(char_options_str)
@@ -1034,13 +1037,6 @@ if __name__ == '__main__':
                     choose_weapon_boolean = True
                 #endregion
 
-                # region Suppressive fire logic:
-                elif (input_str == "S" or input_str == "SUPPRESS") and suppress_avail_boolean:
-                    attempting_suppress_boolean = True
-                    cur_game_state = GAME_STATE_COMBAT_CHOOSE_ATTACK
-                    choose_weapon_boolean = True
-                # endregion
-
                 #region VIEW TURN ORDER logic
                 elif input_str == "V" or input_str == "VIEW TURN ORDER":
 
@@ -1053,10 +1049,13 @@ if __name__ == '__main__':
                 #region 'RUN' logic:
                 elif input_str == "R" or input_str == "RUN":
                     if cur_combat_char.already_fled_this_turn_boolean == False:
-                        prev_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
-                        pc_fleeing_combat_boolean = True
-                        prev_game_state = cur_game_state
-                        cur_game_state = GAME_STATE_CHOOSE_DOOR_DIRECTION
+                        if cur_combat_char.cur_combat_rank == ENUM_RANK_ENEMY_FAR or cur_combat_char.cur_combat_rank == ENUM_RANK_PC_FAR:
+                            prev_game_state = GAME_STATE_COMBAT_ASSIGN_COMMAND
+                            pc_fleeing_combat_boolean = True
+                            prev_game_state = cur_game_state
+                            cur_game_state = GAME_STATE_CHOOSE_DOOR_DIRECTION
+                        else:
+                            print("In order to flee, you must be occupying either the distant enemy position, or the distant friendly position.")
                     else:
                         retreat_str = wrap_str(
                             f"{cur_combat_char.name} is already exhausted from running. They can't retreat again!",
@@ -1369,6 +1368,14 @@ if __name__ == '__main__':
 
                         #Destroy char instance, advance to next char inst in combat_init_list:
                         if remove_from_memory_boolean:
+
+                            #Drop all this char's gear:
+                            if cur_combat_char.char_team_enum == ENUM_CHAR_TEAM_PC:
+                                drop_all_pc_inventory(cur_combat_char,cur_combat_room_id)
+
+                            #If it was a lumbering carrier that just died from DOT, have them spawn larva:
+                            combat_initiative_list,combat_rank_list = spawn_combat_minion(cur_combat_char,combat_initiative_list,combat_rank_list,True)
+
                             # Destroy the defender by removing them from all applicable lists:
                             #print(
                                 #f"Debug: before entering destroy_combatant_inst: the cur_combat_char's index in combat_initiative_list is : {combat_initiative_list.index(cur_combat_char)}.")
@@ -1404,7 +1411,6 @@ if __name__ == '__main__':
                                     print(
                                         "The battle is over! The enemies in this room cavort and slaver in the wake of their victory...\n")
                                     if len(pc_char_list) <= 0:
-                                        print()
                                         print(
                                             "Every playable character has died--you have lost! Hopefully you learned a thing or two from your experiences...")
                                         game_end = True
@@ -1896,17 +1902,7 @@ if __name__ == '__main__':
                                     if (attacking_char.char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER and
                                     attacking_char.can_spawn_minions == True and attacking_char.spawn_minion_count > 0):
                                         #Spawn a certain number of skittering larva:
-                                        for i in range(0,attacking_char.spawn_minion_count):
-                                            minion_inst = Character(ENUM_CHARACTER_ENEMY_SKITTERING_LARVA, attacking_char.cur_grid_x,attacking_char.cur_grid_y,attacking_char.cur_grid,
-                                                                    ENUM_CHAR_TEAM_ENEMY,True)
-                                            #Add to end of initiative_queue and to attacker's current rank in combat_rank_list
-                                            combat_initiative_list.append(minion_inst)
-                                            combat_rank_list[attacking_char.cur_combat_rank].append(minion_inst)
-                                            minion_inst.cur_combat_rank = attacking_char.cur_combat_rank
-                                            #Print result:
-                                            print(f"A {minion_inst.name} has just violently spawned from the {attacking_char.name}'s back!\n")
-
-                                        attacking_char.spawn_minion_count = 0
+                                        combat_initiative_list, combat_rank_list = spawn_combat_minion(attacking_char,combat_initiative_list,combat_rank_list,False)
 
                                     # Targeted rank has already been set, just move to fight:
                                     attacking_char.enemy_ai_fight_boolean = True
@@ -2299,25 +2295,8 @@ if __name__ == '__main__':
                                                             print(f"{defending_char.name} has been killed!\n")
                                                             #Spawn skittering larva, if able:
                                                             if defending_char.char_type_enum == ENUM_CHARACTER_ENEMY_LUMBERING_MAULER and defending_char.spawn_minion_count > 0:
-                                                                # Spawn a certain number of skittering larva:
-                                                                for i in range(0, defending_char.spawn_minion_count):
-                                                                    minion_inst = Character(
-                                                                        ENUM_CHARACTER_ENEMY_SKITTERING_LARVA,
-                                                                        defending_char.cur_grid_x,
-                                                                        defending_char.cur_grid_y,
-                                                                        defending_char.cur_grid,
-                                                                        ENUM_CHAR_TEAM_ENEMY, True)
-                                                                    # Add to end of initiative_queue and to attacker's current rank in combat_rank_list
-                                                                    combat_initiative_list.append(minion_inst)
-                                                                    combat_rank_list[
-                                                                        defending_char.cur_combat_rank].append(
-                                                                        minion_inst)
-                                                                    minion_inst.cur_combat_rank = defending_char.cur_combat_rank
-                                                                    # Print result:
-                                                                    print(
-                                                                        f"While in its death throes, a {minion_inst.name} has just violently spawned from the {defending_char.name}'s back!\n")
-
-                                                                defending_char.spawn_minion_count = 0
+                                                                #Spawn minions:
+                                                                combat_initiative_list, combat_rank_list = spawn_combat_minion(defending_char,combat_initiative_list,combat_rank_list,True)
 
                                                     defender_killed_boolean = True
                                                     if overwatch_loop_mode_enabled:
@@ -2383,7 +2362,16 @@ if __name__ == '__main__':
                                     if item_index >= ENUM_EQUIP_SLOT_TOTAL_SLOTS:
                                         del attacking_char.inv_list[item_index]
                                     else:
-                                        attacking_char.inv_list[item_index] = -1
+                                        is_two_handed_wep = check_two_handed_item(attacking_char.chosen_weapon)
+                                        if is_two_handed_wep == False:
+                                            attacking_char.inv_list[item_index] = -1
+                                        elif is_two_handed_wep == True:
+                                            attacking_char.inv_list[ENUM_EQUIP_SLOT_RH] = -1
+                                            attacking_char.inv_list[ENUM_EQUIP_SLOT_LH] = -1
+                                        elif is_two_handed_wep == -1:
+                                            print(f"DEBUG: EXECUTE_ACTION: destroying 'single use' weapon after it was used for item: {attacking_char.chosen_weapon.item_name}, check_two_handed_item() returned -1 which means the char had equipped a weapon without the equip_slot enums LH or RH, something went very wrong.")
+
+
                             #Set attribute == -1 (remove it from memory)
                             attacking_char.chosen_weapon = -1
 
@@ -2446,7 +2434,6 @@ if __name__ == '__main__':
                             print(
                                 "The battle is over! The enemies in this room cavort and slaver in the wake of their victory...\n")
                             if len(pc_char_list) <= 0:
-                                print()
                                 print("Every playable character has died--you have lost! Hopefully you learned a thing or two from your experiences...")
                                 game_end = True
                             else:
